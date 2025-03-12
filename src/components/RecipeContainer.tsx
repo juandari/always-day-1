@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, ThumbsUp, ThumbsDown, Timer as TimerIcon, ExternalLink, CheckCircle2, Plus, Minus, Users, Image, Info, AlertTriangle, ChefHat, PackageOpen, Utensils } from 'lucide-react';
+import { Check, ThumbsUp, ThumbsDown, Timer as TimerIcon, ExternalLink, CheckCircle2, Plus, Minus, Users, Image, Info, AlertTriangle, ChefHat, PackageOpen, Utensils, ChevronDown, ChevronUp } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -179,6 +179,7 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
   const [completedSteps, setCompletedSteps] = useState<Record<number, boolean>>({});
   const [servings, setServings] = useState(1);
   const [adjustedIngredients, setAdjustedIngredients] = useState([...ingredients]);
+  const [showAlternatives, setShowAlternatives] = useState(false);
   const mainDishConfidence = 92;
 
   const toggleTimer = (stepIndex: number) => {
@@ -219,6 +220,10 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
     setAdjustedIngredients(updated);
   };
 
+  const toggleAlternatives = () => {
+    setShowAlternatives(prev => !prev);
+  };
+
   return (
     <div className="w-full max-w-6xl mx-auto p-6">
       {imageUploaded ? (
@@ -254,41 +259,60 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
           </Card>
           
           <div className="mb-8">
-            <h3 className="text-lg font-medium mb-3">Alternative Dishes</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {alternativeDishes.map((dish, index) => (
-                <Card key={index} className="p-4 glass hover:shadow-md transition-all">
-                  <div className="h-32 overflow-hidden rounded-md bg-gray-200 dark:bg-gray-800 mb-3">
-                    <img 
-                      src={dish.image} 
-                      alt={dish.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = 'https://placehold.co/600x400/gray/white?text=Not+Available';
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <h4 className="font-medium">{dish.name}</h4>
-                    <div className="flex items-center mt-1">
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-                        <div 
-                          className={`h-1.5 rounded-full ${
-                            dish.confidence > 80 ? 'bg-green-500' : 
-                            dish.confidence > 70 ? 'bg-yellow-500' : 'bg-orange-500'
-                          }`}
-                          style={{width: `${dish.confidence}%`}}
-                        ></div>
-                      </div>
-                      <span className="ml-2 text-xs">{dish.confidence}%</span>
+            <Button 
+              onClick={toggleAlternatives} 
+              variant="outline" 
+              className="mb-3 w-full flex justify-between items-center py-3"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-medium">Alternative Dishes</span>
+                <div className="text-sm text-muted-foreground">
+                  {!showAlternatives && "May be a better match for your ingredients"}
+                </div>
+              </div>
+              {showAlternatives ? (
+                <ChevronUp className="w-5 h-5" />
+              ) : (
+                <ChevronDown className="w-5 h-5" />
+              )}
+            </Button>
+            
+            {showAlternatives && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 fade-in">
+                {alternativeDishes.map((dish, index) => (
+                  <Card key={index} className="p-4 glass hover:shadow-md transition-all">
+                    <div className="h-32 overflow-hidden rounded-md bg-gray-200 dark:bg-gray-800 mb-3">
+                      <img 
+                        src={dish.image} 
+                        alt={dish.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = 'https://placehold.co/600x400/gray/white?text=Not+Available';
+                        }}
+                      />
                     </div>
-                  </div>
-                  <Button variant="ghost" size="sm" className="w-full mt-2">
-                    <ChefHat className="w-4 h-4 mr-2" /> Use this recipe
-                  </Button>
-                </Card>
-              ))}
-            </div>
+                    <div>
+                      <h4 className="font-medium">{dish.name}</h4>
+                      <div className="flex items-center mt-1">
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                          <div 
+                            className={`h-1.5 rounded-full ${
+                              dish.confidence > 80 ? 'bg-green-500' : 
+                              dish.confidence > 70 ? 'bg-yellow-500' : 'bg-orange-500'
+                            }`}
+                            style={{width: `${dish.confidence}%`}}
+                          ></div>
+                        </div>
+                        <span className="ml-2 text-xs">{dish.confidence}%</span>
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="sm" className="w-full mt-2">
+                      <ChefHat className="w-4 h-4 mr-2" /> Use this recipe
+                    </Button>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
       
           <div className="grid md:grid-cols-2 gap-6">

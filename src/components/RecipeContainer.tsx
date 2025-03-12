@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
-import { Check, ThumbsUp, ThumbsDown, Timer, ExternalLink } from 'lucide-react';
+import { Check, ThumbsUp, ThumbsDown, Timer as TimerIcon, ExternalLink } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import Timer from './Timer';
 
 interface Ingredient {
   name: string;
@@ -128,6 +129,15 @@ const toolsProducts: Product[] = [
 ];
 
 const RecipeContainer = () => {
+  const [activeTimers, setActiveTimers] = useState<Record<number, boolean>>({});
+  
+  const toggleTimer = (stepIndex: number) => {
+    setActiveTimers(prev => ({
+      ...prev,
+      [stepIndex]: !prev[stepIndex]
+    }));
+  };
+  
   return (
     <div className="w-full max-w-6xl mx-auto p-6">
       <div className="grid md:grid-cols-2 gap-6">
@@ -167,12 +177,28 @@ const RecipeContainer = () => {
                   <span className="font-medium">Step {index + 1}</span>
                   {step.time && (
                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <Timer className="w-4 h-4" />
+                      <TimerIcon className="w-4 h-4" />
                       <span>{step.time} mins</span>
                     </div>
                   )}
                 </div>
                 <p className="text-sm mb-3">{step.text}</p>
+                {step.time && (
+                  <div className="mb-3">
+                    {activeTimers[index] ? (
+                      <Timer minutes={step.time} stepNumber={index + 1} />
+                    ) : (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => toggleTimer(index)}
+                        className="w-full"
+                      >
+                        <TimerIcon className="w-4 h-4 mr-1" /> Start Timer
+                      </Button>
+                    )}
+                  </div>
+                )}
                 <div className="flex gap-2">
                   <Button variant="ghost" size="sm">
                     <ThumbsUp className="w-4 h-4 mr-1" />

@@ -38,7 +38,7 @@ const RecipeContainer = () => {
             {ingredients.map((ingredient, index) => (
               <li
                 key={index}
-                className="fade-in flex items-center justify-between p-3 rounded-lg bg-white/5 backdrop-blur-sm"
+                className="fade-in flex items-center justify-between p-3 rounded-lg bg-white/5 backdrop-blur-sm dark:bg-black/20"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className="flex items-center gap-2">
@@ -60,7 +60,7 @@ const RecipeContainer = () => {
             {steps.map((step, index) => (
               <div
                 key={index}
-                className="fade-in p-4 rounded-lg bg-white/5 backdrop-blur-sm"
+                className="fade-in p-4 rounded-lg bg-white/5 backdrop-blur-sm dark:bg-black/20"
                 style={{ animationDelay: `${index * 150}ms` }}
               >
                 <div className="flex justify-between items-start mb-2">

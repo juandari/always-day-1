@@ -54,7 +54,7 @@ const ImageUpload = () => {
             htmlFor="image-upload"
             className="flex flex-col items-center space-y-4 cursor-pointer"
           >
-            <div className="p-4 rounded-full bg-primary/5 hover:bg-primary/10 transition-colors">
+            <div className="p-4 rounded-full bg-primary/5 hover:bg-primary/10 transition-colors dark:bg-primary/10 dark:hover:bg-primary/20">
               <Camera className="w-8 h-8 text-primary" />
             </div>
             <div className="flex items-center gap-2">
@@ -71,7 +71,7 @@ const ImageUpload = () => {
             />
             <button
               onClick={() => setImage(null)}
-              className="absolute top-2 right-2 p-2 rounded-full bg-white/10 backdrop-blur-lg hover:bg-white/20 transition-colors"
+              className="absolute top-2 right-2 p-2 rounded-full bg-white/10 backdrop-blur-lg hover:bg-white/20 transition-colors dark:bg-black/30"
             >
               <CircleX className="w-5 h-5" />
             </button>

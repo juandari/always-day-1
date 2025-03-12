@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Check, ThumbsUp, ThumbsDown, Timer, ExternalLink } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
@@ -225,14 +225,27 @@ const RecipeContainer = () => {
 };
 
 const ProductCard = ({ product }: { product: Product }) => {
+  const [imageError, setImageError] = useState(false);
+
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
   return (
     <div className="fade-in rounded-lg overflow-hidden glass border border-white/10 dark:border-white/5">
-      <div className="h-32 overflow-hidden">
-        <img
-          src={product.image}
-          alt={product.name}
-          className="w-full h-full object-cover transition-transform hover:scale-105"
-        />
+      <div className="h-32 overflow-hidden bg-gray-200 dark:bg-gray-800">
+        {!imageError ? (
+          <img
+            src={product.image}
+            alt={product.name}
+            className="w-full h-full object-cover transition-transform hover:scale-105"
+            onError={handleImageError}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
+            <span className="text-sm">Product Image</span>
+          </div>
+        )}
       </div>
       <div className="p-4">
         <h3 className="font-medium truncate">{product.name}</h3>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, ThumbsUp, ThumbsDown, Timer as TimerIcon, ExternalLink, CheckCircle2 } from 'lucide-react';
+import { Check, ThumbsUp, ThumbsDown, Timer as TimerIcon, ExternalLink, CheckCircle2, Plus, Minus, Users } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ interface Ingredient {
   name: string;
   confidence: number;
   amount: string;
+  baseAmount: string;
 }
 
 interface Step {
@@ -28,9 +29,9 @@ interface Product {
 }
 
 const ingredients: Ingredient[] = [
-  { name: 'Fresh Tomatoes', confidence: 95, amount: '4 medium' },
-  { name: 'Olive Oil', confidence: 88, amount: '2 tbsp' },
-  { name: 'Garlic', confidence: 92, amount: '3 cloves' },
+  { name: 'Fresh Tomatoes', confidence: 95, amount: '4 medium', baseAmount: '4 medium' },
+  { name: 'Olive Oil', confidence: 88, amount: '2 tbsp', baseAmount: '2 tbsp' },
+  { name: 'Garlic', confidence: 92, amount: '3 cloves', baseAmount: '3 cloves' },
 ];
 
 const steps: Step[] = [
@@ -129,9 +130,25 @@ const toolsProducts: Product[] = [
   },
 ];
 
+const adjustIngredientAmount = (baseAmount: string, servings: number): string => {
+  const match = baseAmount.match(/^(\d+(?:\.\d+)?)\s*(.*)$/);
+  
+  if (!match) return baseAmount;
+  
+  const [, numStr, unit] = match;
+  const baseNum = parseFloat(numStr);
+  const adjustedNum = baseNum * servings;
+  
+  const formattedNum = Number.isInteger(adjustedNum) ? adjustedNum.toString() : adjustedNum.toFixed(1);
+  
+  return `${formattedNum} ${unit}`;
+};
+
 const RecipeContainer = () => {
   const [activeTimers, setActiveTimers] = useState<Record<number, boolean>>({});
   const [completedSteps, setCompletedSteps] = useState<Record<number, boolean>>({});
+  const [servings, setServings] = useState(1);
+  const [adjustedIngredients, setAdjustedIngredients] = useState([...ingredients]);
   
   const toggleTimer = (stepIndex: number) => {
     setActiveTimers(prev => ({
@@ -146,15 +163,64 @@ const RecipeContainer = () => {
       [stepIndex]: !prev[stepIndex]
     }));
   };
+
+  const increaseServings = () => {
+    if (servings < 10) {
+      const newServings = servings + 1;
+      setServings(newServings);
+      updateIngredientAmounts(newServings);
+    }
+  };
+
+  const decreaseServings = () => {
+    if (servings > 1) {
+      const newServings = servings - 1;
+      setServings(newServings);
+      updateIngredientAmounts(newServings);
+    }
+  };
+
+  const updateIngredientAmounts = (newServings: number) => {
+    const updated = ingredients.map(ingredient => ({
+      ...ingredient,
+      amount: adjustIngredientAmount(ingredient.baseAmount, newServings)
+    }));
+    setAdjustedIngredients(updated);
+  };
   
   return (
     <div className="w-full max-w-6xl mx-auto p-6">
       <div className="grid md:grid-cols-2 gap-6">
-        {/* Ingredients Panel */}
         <Card className="p-6 glass">
-          <h2 className="text-xl font-semibold mb-4">Ingredients</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Ingredients</h2>
+            <div className="flex items-center gap-2 bg-white/10 dark:bg-black/20 p-2 rounded-lg">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={decreaseServings}
+                disabled={servings <= 1}
+                className="h-8 w-8"
+              >
+                <Minus className="w-4 h-4" />
+              </Button>
+              <div className="flex items-center gap-1 min-w-[80px] justify-center">
+                <Users className="w-4 h-4" />
+                <span className="font-medium">{servings} {servings === 1 ? 'serving' : 'servings'}</span>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={increaseServings}
+                disabled={servings >= 10}
+                className="h-8 w-8"
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
           <ul className="space-y-3">
-            {ingredients.map((ingredient, index) => (
+            {adjustedIngredients.map((ingredient, index) => (
               <li
                 key={index}
                 className="fade-in flex items-center justify-between p-3 rounded-lg bg-white/5 backdrop-blur-sm dark:bg-black/20"
@@ -175,7 +241,6 @@ const RecipeContainer = () => {
           </ul>
         </Card>
 
-        {/* Instructions Panel */}
         <Card className="p-6 glass">
           <h2 className="text-xl font-semibold mb-4">Cooking Instructions</h2>
           <div className="space-y-0">
@@ -185,13 +250,11 @@ const RecipeContainer = () => {
                 className={`fade-in relative ${index < steps.length - 1 ? 'pb-8' : 'pb-4'}`}
                 style={{ animationDelay: `${index * 150}ms` }}
               >
-                {/* Vertical progression line */}
                 {index < steps.length - 1 && (
                   <div className="absolute left-6 top-14 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
                 )}
                 
                 <div className="relative p-4 rounded-lg bg-white/5 backdrop-blur-sm dark:bg-black/20">
-                  {/* Step indicator */}
                   <div className="absolute -left-3 top-4 flex items-center justify-center w-6 h-6 rounded-full bg-secondary text-secondary-foreground z-10">
                     {completedSteps[index] ? (
                       <CheckCircle2 className="w-6 h-6 text-green-500" />
@@ -265,7 +328,6 @@ const RecipeContainer = () => {
         </Card>
       </div>
 
-      {/* Products Section */}
       <Card className="mt-8 p-6 glass">
         <Tabs defaultValue="exact" className="w-full">
           <TabsList className="grid w-full grid-cols-3 glass">

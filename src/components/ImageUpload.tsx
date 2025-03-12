@@ -5,7 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/components/ui/use-toast';
 
-const ImageUpload = () => {
+interface ImageUploadProps {
+  onImageUpload: (uploaded: boolean) => void;
+}
+
+const ImageUpload = ({ onImageUpload }: ImageUploadProps) => {
   const [image, setImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -31,11 +35,22 @@ const ImageUpload = () => {
         if (prev >= 100) {
           clearInterval(interval);
           setIsProcessing(false);
+          onImageUpload(true);
+          toast({
+            title: "Analysis Complete",
+            description: "Your dish has been analyzed successfully!",
+            duration: 3000,
+          });
           return 100;
         }
         return prev + 10;
       });
     }, 300);
+  };
+
+  const handleRemoveImage = () => {
+    setImage(null);
+    onImageUpload(false);
   };
 
   return (
@@ -70,7 +85,7 @@ const ImageUpload = () => {
               className="w-full h-full object-cover rounded-xl"
             />
             <button
-              onClick={() => setImage(null)}
+              onClick={handleRemoveImage}
               className="absolute top-2 right-2 p-2 rounded-full bg-white/10 backdrop-blur-lg hover:bg-white/20 transition-colors dark:bg-black/30"
             >
               <CircleX className="w-5 h-5" />

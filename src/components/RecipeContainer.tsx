@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Check, ThumbsUp, ThumbsDown, Timer as TimerIcon, ExternalLink, CheckCircle2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,6 +9,7 @@ import Timer from './Timer';
 interface Ingredient {
   name: string;
   confidence: number;
+  amount: string;
 }
 
 interface Step {
@@ -28,9 +28,9 @@ interface Product {
 }
 
 const ingredients: Ingredient[] = [
-  { name: 'Fresh Tomatoes', confidence: 95 },
-  { name: 'Olive Oil', confidence: 88 },
-  { name: 'Garlic', confidence: 92 },
+  { name: 'Fresh Tomatoes', confidence: 95, amount: '4 medium' },
+  { name: 'Olive Oil', confidence: 88, amount: '2 tbsp' },
+  { name: 'Garlic', confidence: 92, amount: '3 cloves' },
 ];
 
 const steps: Step[] = [
@@ -164,9 +164,12 @@ const RecipeContainer = () => {
                   <Check className="w-4 h-4 text-green-500" />
                   <span>{ingredient.name}</span>
                 </div>
-                <span className="text-sm text-muted-foreground">
-                  {ingredient.confidence}% match
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium">{ingredient.amount}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {ingredient.confidence}% match
+                  </span>
+                </div>
               </li>
             ))}
           </ul>

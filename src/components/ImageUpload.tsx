@@ -37,8 +37,8 @@ const ImageUpload = ({ onImageUpload }: ImageUploadProps) => {
           setIsProcessing(false);
           onImageUpload(true);
           toast({
-            title: "Analysis Complete",
-            description: "Your dish has been analyzed successfully!",
+            title: "Dish Recognition Complete",
+            description: "We've identified your dish and prepared a recipe for you!",
             duration: 3000,
           });
           return 100;
@@ -72,9 +72,15 @@ const ImageUpload = ({ onImageUpload }: ImageUploadProps) => {
             <div className="p-4 rounded-full bg-primary/5 hover:bg-primary/10 transition-colors dark:bg-primary/10 dark:hover:bg-primary/20">
               <Camera className="w-8 h-8 text-primary" />
             </div>
-            <div className="flex items-center gap-2">
-              <Upload className="w-4 h-4" />
-              <span>Upload or take a photo</span>
+            <div className="flex flex-col items-center gap-2 text-center">
+              <span className="font-medium">Take a photo or upload an image of any dish</span>
+              <p className="text-sm text-muted-foreground max-w-md">
+                Our AI will identify the dish, list ingredients, and provide cooking instructions
+              </p>
+              <div className="flex items-center gap-2 mt-2">
+                <Upload className="w-4 h-4" />
+                <span>Click here to start</span>
+              </div>
             </div>
           </label>
         ) : (
@@ -96,7 +102,7 @@ const ImageUpload = ({ onImageUpload }: ImageUploadProps) => {
         {isProcessing && (
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center gap-4">
             <Progress value={progress} className="w-56" />
-            <p className="text-white text-sm">AI is analyzing your dish...</p>
+            <p className="text-white text-sm">AI is analyzing your dish and generating a recipe...</p>
           </div>
         )}
       </div>

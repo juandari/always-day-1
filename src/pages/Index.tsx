@@ -19,14 +19,17 @@ const Index = () => {
           <DarkModeToggle />
         </div>
         <h1 className="text-4xl font-bold mb-2">Recipe Genie</h1>
-        <p className="text-muted-foreground">Upload a photo of your ingredients to get started</p>
+        <p className="text-muted-foreground max-w-2xl mx-auto">
+          Upload a photo of any dish, and our AI will recognize it, list the ingredients, 
+          and provide step-by-step cooking instructions
+        </p>
       </header>
 
       <main className="container mx-auto px-4">
         <ImageUpload onImageUpload={handleImageUpload} />
         <div className="flex items-center justify-center gap-2 mb-8 text-sm text-muted-foreground">
           <Lock className="w-4 h-4" />
-          <span>Processed locally on your device - Your privacy protected</span>
+          <span>Your photos are processed locally - your privacy is protected</span>
         </div>
         <RecipeContainer imageUploaded={imageUploaded} />
       </main>

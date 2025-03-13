@@ -233,7 +233,7 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
               <h2 className="text-xl font-semibold">Recognized Dish</h2>
               <div className="flex items-center gap-2 bg-white/10 dark:bg-black/20 p-2 rounded-lg">
                 <Info className="w-4 h-4 text-blue-500" />
-                <span className="text-sm">Primary Dish</span>
+                <span className="text-sm">Primary Match</span>
               </div>
             </div>
             
@@ -265,9 +265,9 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
               className="mb-3 w-full flex justify-between items-center py-3"
             >
               <div className="flex items-center gap-2">
-                <span className="text-lg font-medium">Alternative Dishes</span>
+                <span className="text-lg font-medium">Alternative Dish Predictions</span>
                 <div className="text-sm text-muted-foreground">
-                  {!showAlternatives && "May be a better match for your ingredients"}
+                  {!showAlternatives && "We also detected these similar dishes from your photo"}
                 </div>
               </div>
               {showAlternatives ? (
@@ -318,7 +318,7 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
           <div className="grid md:grid-cols-2 gap-6">
             <Card className="p-6 glass">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Ingredients</h2>
+                <h2 className="text-xl font-semibold">Predicted Ingredients</h2>
                 <div className="flex items-center gap-2 bg-white/10 dark:bg-black/20 p-2 rounded-lg">
                   <Button 
                     variant="ghost" 
@@ -367,7 +367,7 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
             </Card>
 
             <Card className="p-6 glass">
-              <h2 className="text-xl font-semibold mb-4">Cooking Instructions</h2>
+              <h2 className="text-xl font-semibold mb-4">Suggested Cooking Instructions</h2>
               <div className="space-y-0">
                 {steps.map((step, index) => (
                   <div
@@ -456,9 +456,9 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
           <Card className="mt-8 p-6 glass">
             <Tabs defaultValue="exact" className="w-full">
               <TabsList className="grid w-full grid-cols-3 glass">
-                <TabsTrigger value="exact">Exact Matches</TabsTrigger>
-                <TabsTrigger value="alternatives">Alternatives</TabsTrigger>
-                <TabsTrigger value="tools">Tools</TabsTrigger>
+                <TabsTrigger value="exact">Recommended Ingredients</TabsTrigger>
+                <TabsTrigger value="alternatives">Alternative Options</TabsTrigger>
+                <TabsTrigger value="tools">Cooking Tools</TabsTrigger>
               </TabsList>
               <TabsContent value="exact" className="mt-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -490,10 +490,10 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
             <div className="p-4 rounded-full bg-primary/5 mb-4">
               <Utensils className="w-12 h-12 text-muted-foreground" />
             </div>
-            <h3 className="text-xl font-medium mb-2">No Ingredients Yet</h3>
+            <h3 className="text-xl font-medium mb-2">Waiting for Your Dish</h3>
             <p className="text-center text-muted-foreground max-w-md">
-              Upload a photo of your dish to get a list of ingredients 
-              with precise measurements.
+              Upload a photo of any dish and our AI will identify the ingredients 
+              with precise measurements for you to recreate it.
             </p>
           </Card>
           
@@ -501,10 +501,10 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
             <div className="p-4 rounded-full bg-primary/5 mb-4">
               <ChefHat className="w-12 h-12 text-muted-foreground" />
             </div>
-            <h3 className="text-xl font-medium mb-2">No Cooking Instructions</h3>
+            <h3 className="text-xl font-medium mb-2">Ready to Cook</h3>
             <p className="text-center text-muted-foreground max-w-md">
-              Upload a photo of your dish to get step-by-step 
-              cooking instructions with timers.
+              After analyzing your dish photo, we'll provide detailed step-by-step 
+              cooking instructions with helpful timers.
             </p>
           </Card>
           
@@ -512,10 +512,10 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
             <div className="p-4 rounded-full bg-primary/5 mb-4">
               <PackageOpen className="w-12 h-12 text-muted-foreground" />
             </div>
-            <h3 className="text-xl font-medium mb-2">No Product Recommendations</h3>
+            <h3 className="text-xl font-medium mb-2">Shop With Confidence</h3>
             <p className="text-center text-muted-foreground max-w-md">
-              Upload a photo of your dish to get personalized product recommendations,
-              including ingredients and tools.
+              We'll suggest the exact ingredients and cooking tools you need to recreate the dish.
+              Just upload a photo to get started.
             </p>
           </Card>
           
@@ -525,10 +525,10 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
               size="lg"
               className="bg-gradient-to-r from-primary to-primary/80"
             >
-              <Image className="w-5 h-5 mr-2" /> Upload a Photo
+              <Image className="w-5 h-5 mr-2" /> Upload a Dish Photo
             </Button>
             <p className="mt-2 text-sm text-muted-foreground">
-              Take a photo of your ingredients or a dish to get started
+              Take a photo of any prepared dish or meal to get the recipe
             </p>
           </div>
         </div>

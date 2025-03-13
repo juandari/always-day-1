@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import Timer from "./Timer";
 import { useToast } from "@/components/ui/use-toast";
+import { productList } from "@/mock/product-list";
 
 interface Ingredient {
   name: string;
@@ -38,13 +39,12 @@ interface Step {
 }
 
 interface Product {
-  id: number;
   name: string;
-  image: string;
   price: string;
-  store: string;
-  rating: number;
-  updatedAt: string;
+  link: string;
+  image: string;
+  shopName: string;
+  rating: string;
 }
 
 interface AlternativeDish {
@@ -79,126 +79,6 @@ const steps: Step[] = [
   { text: "Add minced garlic and sauté until fragrant", time: 3 },
 ];
 
-const alternativeDishes: AlternativeDish[] = [
-  {
-    name: "Tomato Bruschetta",
-    confidence: 82,
-    image:
-      "https://images.unsplash.com/photo-1506280754576-f6fa8a873550?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
-  },
-  {
-    name: "Caprese Salad",
-    confidence: 75,
-    image:
-      "https://images.unsplash.com/photo-1608897013039-887f21d8c804?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
-  },
-  {
-    name: "Tomato Soup",
-    confidence: 68,
-    image:
-      "https://images.unsplash.com/photo-1603105037880-880cd4edfb0d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
-  },
-];
-
-const exactProducts: Product[] = [
-  {
-    id: 1,
-    name: "Organic Roma Tomatoes",
-    image:
-      "https://images.unsplash.com/photo-1518977822534-7049a61ee0c2?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
-    price: "$3.99",
-    store: "Whole Foods",
-    rating: 4.8,
-    updatedAt: "2h ago",
-  },
-  {
-    id: 2,
-    name: "Extra Virgin Olive Oil",
-    image:
-      "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
-    price: "$12.99",
-    store: "Trader Joe's",
-    rating: 4.9,
-    updatedAt: "1d ago",
-  },
-  {
-    id: 3,
-    name: "Organic Garlic Bulb",
-    image:
-      "https://images.unsplash.com/photo-1540148426945-6cf22a6b2383?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
-    price: "$0.99",
-    store: "Local Market",
-    rating: 4.7,
-    updatedAt: "5h ago",
-  },
-];
-
-const alternativeProducts: Product[] = [
-  {
-    id: 4,
-    name: "Cherry Tomatoes",
-    image:
-      "https://images.unsplash.com/photo-1546094096-0df4bcaaa337?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
-    price: "$4.49",
-    store: "Sprouts",
-    rating: 4.6,
-    updatedAt: "3h ago",
-  },
-  {
-    id: 5,
-    name: "Avocado Oil",
-    image:
-      "https://images.unsplash.com/photo-1620405116976-f0d746728a93?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
-    price: "$15.99",
-    store: "Whole Foods",
-    rating: 4.5,
-    updatedAt: "1d ago",
-  },
-  {
-    id: 6,
-    name: "Garlic Powder",
-    image:
-      "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
-    price: "$2.99",
-    store: "Trader Joe's",
-    rating: 4.4,
-    updatedAt: "2d ago",
-  },
-];
-
-const toolsProducts: Product[] = [
-  {
-    id: 7,
-    name: "Non-stick Frying Pan",
-    image:
-      "https://images.unsplash.com/photo-1620811992176-25337a232502?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
-    price: "$29.99",
-    store: "Target",
-    rating: 4.7,
-    updatedAt: "1w ago",
-  },
-  {
-    id: 8,
-    name: "Chef's Knife",
-    image:
-      "https://images.unsplash.com/photo-1589970228015-b54a94f97bd0?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
-    price: "$49.99",
-    store: "Williams Sonoma",
-    rating: 4.9,
-    updatedAt: "3d ago",
-  },
-  {
-    id: 9,
-    name: "Wooden Cutting Board",
-    image:
-      "https://images.unsplash.com/photo-1596381211657-a0f05548f39a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
-    price: "$24.99",
-    store: "Crate & Barrel",
-    rating: 4.8,
-    updatedAt: "5d ago",
-  },
-];
-
 const adjustIngredientAmount = (
   baseAmount: string,
   servings: number
@@ -228,7 +108,6 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
   const [adjustedIngredients, setAdjustedIngredients] = useState([
     ...ingredients,
   ]);
-  const [showAlternatives, setShowAlternatives] = useState(false);
   const mainDishConfidence = 92;
 
   const toggleTimer = (stepIndex: number) => {
@@ -269,9 +148,6 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
     setAdjustedIngredients(updated);
   };
 
-  const toggleAlternatives = () => {
-    setShowAlternatives((prev) => !prev);
-  };
 
   return (
     <div className="w-full max-w-6xl mx-auto p-6">
@@ -310,73 +186,6 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
               </div>
             </div>
           </Card>
-
-          <div className="mb-8">
-            <Button
-              onClick={toggleAlternatives}
-              variant="outline"
-              className="mb-3 w-full flex justify-between items-center py-3"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-medium">
-                  Alternative Dish Predictions
-                </span>
-                <div className="text-sm text-muted-foreground">
-                  {!showAlternatives &&
-                    "We also detected these similar dishes from your photo"}
-                </div>
-              </div>
-              {showAlternatives ? (
-                <ChevronUp className="w-5 h-5" />
-              ) : (
-                <ChevronDown className="w-5 h-5" />
-              )}
-            </Button>
-
-            {showAlternatives && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 fade-in">
-                {alternativeDishes.map((dish, index) => (
-                  <Card
-                    key={index}
-                    className="p-4 glass hover:shadow-md transition-all"
-                  >
-                    <div className="h-32 overflow-hidden rounded-md bg-gray-200 dark:bg-gray-800 mb-3">
-                      <img
-                        src={dish.image}
-                        alt={dish.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.src =
-                            "https://placehold.co/600x400/gray/white?text=Not+Available";
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <h4 className="font-medium">{dish.name}</h4>
-                      <div className="flex items-center mt-1">
-                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-                          <div
-                            className={`h-1.5 rounded-full ${
-                              dish.confidence > 80
-                                ? "bg-green-500"
-                                : dish.confidence > 70
-                                ? "bg-yellow-500"
-                                : "bg-orange-500"
-                            }`}
-                            style={{ width: `${dish.confidence}%` }}
-                          ></div>
-                        </div>
-                        <span className="ml-2 text-xs">{dish.confidence}%</span>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="sm" className="w-full mt-2">
-                      <ChefHat className="w-4 h-4 mr-2" /> Use this recipe
-                    </Button>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
 
           <div className="grid md:grid-cols-2 gap-6">
             <Card className="p-6 glass">
@@ -538,30 +347,20 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
 
           <Card className="mt-8 p-6 glass">
             <Tabs defaultValue="exact" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 glass">
+              <TabsList className="grid w-full grid-cols-2 glass">
                 <TabsTrigger value="exact">Recommended Ingredients</TabsTrigger>
-                <TabsTrigger value="alternatives">
-                  Alternative Options
-                </TabsTrigger>
                 <TabsTrigger value="tools">Cooking Tools</TabsTrigger>
               </TabsList>
               <TabsContent value="exact" className="mt-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {exactProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
-                </div>
-              </TabsContent>
-              <TabsContent value="alternatives" className="mt-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {alternativeProducts.map((product) => (
+                  {productList.ingredients.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))}
                 </div>
               </TabsContent>
               <TabsContent value="tools" className="mt-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {toolsProducts.map((product) => (
+                  {productList.tools.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))}
                 </div>
@@ -623,27 +422,14 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
 };
 
 const ProductCard = ({ product }: { product: Product }) => {
-  const [imageError, setImageError] = useState(false);
-
-  const handleImageError = () => {
-    setImageError(true);
-  };
-
   return (
     <div className="fade-in rounded-lg overflow-hidden glass border border-white/10 dark:border-white/5">
-      <div className="h-32 overflow-hidden bg-gray-200 dark:bg-gray-800">
-        {!imageError ? (
-          <img
-            src={product.image}
-            alt={product.name}
-            className="w-full h-full object-cover transition-transform hover:scale-105"
-            onError={handleImageError}
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
-            <span className="text-sm">Product Image</span>
-          </div>
-        )}
+      <div className="h-72 mx-auto aspect-square overflow-hidden bg-gray-200 dark:bg-gray-800">
+        <img
+          src={product.image}
+          alt={product.name}
+          className="w-full h-full object-contain transition-transform hover:scale-105"
+        />
       </div>
       <div className="p-4">
         <h3 className="font-medium truncate">{product.name}</h3>
@@ -655,10 +441,9 @@ const ProductCard = ({ product }: { product: Product }) => {
           </div>
         </div>
         <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
-          <span>{product.store}</span>
-          <span>Updated {product.updatedAt}</span>
+          <span>{product.shopName}</span>
         </div>
-        <Button variant="outline" size="sm" className="w-full mt-3">
+        <Button onClick={() => window.open(product.link, "_blank")} variant="outline" size="sm" className="w-full mt-3">
           <ExternalLink className="w-3.5 h-3.5 mr-1" />
           View Product
         </Button>

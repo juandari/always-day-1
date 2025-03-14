@@ -222,9 +222,7 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
                 ))}
               </ul>
             </Card>
-            <CookingInstructions
-              steps={steps}
-            />
+            <CookingInstructions />
           </div>
 
           <Card className="mt-8 p-6 glass">

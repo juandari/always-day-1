@@ -9,10 +9,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import Timer from "./Timer";
 import { Card } from "@/components/ui/card";
+import Mock from "@/mock/cooking-instruction";
 
-const CookingInstructions = ({ steps }) => {
+function cleanJSON(rawString) {
+  return rawString.replace(/```(?:json)?\n?|```/g, '').trim();
+}
+
+const CookingInstructions = () => {
   const [activeTimers, setActiveTimers] = useState<Record<number, boolean>>({});
   const [isLoading, setIsLoading] = useState(true);
+  // const [steps, setSteps] = useState(Mock.instructions);
+  const [steps, setSteps] = useState([]);
   const [completedSteps, setCompletedSteps] = useState<Record<number, boolean>>(
     {}
   );
@@ -34,30 +41,58 @@ const CookingInstructions = ({ steps }) => {
     const createModel = async () => {
       const session = await window.ai.languageModel.create();
       const promptResult = await session.prompt(`
-        List step-by-step cooking instructions for Soto Ayam 
-        add time estimates for each step
-        using only the following ingredients:
-        •	Chicken pieces
-        •	Chicken stock or broth
-        •	Onion, finely chopped
-        •	Garlic cloves, minced
-        •	Ginger, sliced or grated
-        •	Lemongrass, bruised
-        
-        give me in json format
+        Generate a step-by-step cooking guide for making Soto Ayam using only the specified ingredients.  
+        Each step should include an estimated time in minutes.  
+
+        ### Ingredients (Only Use These):
+        - Chicken pieces  
+        - Chicken stock or broth  
+        - Onion (finely chopped)  
+        - Garlic cloves (minced)  
+        - Ginger (sliced or grated)  
+        - Lemongrass (bruised)  
+
+        ### Output Format:
+        Return a valid JSON object with the following structure:
         {
-          inggrdients: [],
-          instructions: [
-            { step: "", description: "", time: 0 },
+          "ingredients": [
+            "Chicken pieces",
+            "Chicken stock or broth",
+            "Onion, finely chopped",
+            "Garlic cloves, minced",
+            "Ginger, sliced or grated",
+            "Lemongrass, bruised"
           ],
+          "instructions": [
+            {
+              "step": "Step title here...", <-- without time minutes
+              "description": "Step description here...",
+              "time": 2 <-- in single numbers without range (e.g. 2, not 2-3)
+            }
+          ]
         }
+
+        - Ensure the JSON is properly formatted.
+        - Do **not** add extra ingredients or modify the cooking process.
+        - Use a natural cooking sequence from preparation to serving.  
       `);
-      setIsLoading(false);
-      console.log(promptResult);
+      // console.log('#promp result:', promptResult);
+
+      try {
+        const cleanResult = cleanJSON(promptResult);
+        // console.log('#clean result:', cleanResult);
+        setIsLoading(false);
+        const parsedResult = JSON.parse(cleanResult);
+        setSteps(parsedResult.instructions);
+      } catch (error) {
+        console.error("Error parsing JSON:", error);
+      }
     };
 
     createModel();
   }, []);
+
+  // console.log(steps);
 
   return (
     <Card className="p-6 glass">
@@ -76,10 +111,6 @@ const CookingInstructions = ({ steps }) => {
               }`}
               style={{ animationDelay: `${index * 150}ms` }}
             >
-              {index < steps.length - 1 && (
-                <div className="absolute left-6 top-14 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
-              )}
-
               <div className="relative p-4 rounded-lg bg-white/5 backdrop-blur-sm dark:bg-black/20">
                 <div className="absolute -left-3 top-4 flex items-center justify-center w-6 h-6 rounded-full bg-secondary text-secondary-foreground z-10">
                   {completedSteps[index] ? (
@@ -88,10 +119,11 @@ const CookingInstructions = ({ steps }) => {
                     <span className="text-xs font-medium">{index + 1}</span>
                   )}
                 </div>
-
                 <div className="ml-4">
                   <div className="flex justify-between items-start mb-2">
-                    <span className="font-medium">Step {index + 1}</span>
+                    <span className="font-medium">
+                      Step {index + 1}: {step.step}
+                    </span>
                     {step.time && (
                       <div className="flex items-center gap-1 text-sm text-muted-foreground">
                         <TimerIcon className="w-4 h-4" />
@@ -99,8 +131,7 @@ const CookingInstructions = ({ steps }) => {
                       </div>
                     )}
                   </div>
-                  <p className="text-sm mb-3">{step.text}</p>
-
+                  <p className="text-sm mb-3">{step.description}</p>
                   <div className="flex items-center gap-2 mb-3">
                     {step.time && (
                       <div
@@ -123,7 +154,6 @@ const CookingInstructions = ({ steps }) => {
                         )}
                       </div>
                     )}
-
                     <div className="flex items-center">
                       <Checkbox
                         id={`step-${index}`}
@@ -138,17 +168,6 @@ const CookingInstructions = ({ steps }) => {
                         Mark Complete
                       </label>
                     </div>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="sm">
-                      <ThumbsUp className="w-4 h-4 mr-1" />
-                      Helpful
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      <ThumbsDown className="w-4 h-4 mr-1" />
-                      Not helpful
-                    </Button>
                   </div>
                 </div>
               </div>

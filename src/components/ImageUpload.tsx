@@ -1,15 +1,21 @@
-
-import React, { useState } from 'react';
-import { Camera, Upload, CircleX } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { useToast } from '@/components/ui/use-toast';
+import React, { useState } from "react";
+import { Camera, Upload, CircleX, Image } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/components/ui/use-toast";
+import CameraModal from "./camera-modal";
+import { TextDivider } from "./text-divider";
+import { getPromptAi } from "@/lib/get-prompt-ai";
+import { useRecipe } from "@/context/recipe";
+import safeParse from "@/lib/safe-parse";
 
 interface ImageUploadProps {
   onImageUpload: (uploaded: boolean) => void;
 }
 
 const ImageUpload = ({ onImageUpload }: ImageUploadProps) => {
+  const {setData} = useRecipe()
+
   const [image, setImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -21,13 +27,13 @@ const ImageUpload = ({ onImageUpload }: ImageUploadProps) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         setImage(e.target?.result as string);
-        simulateProcessing();
+        processImage();
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const simulateProcessing = () => {
+  const processImage = async () => {
     setIsProcessing(true);
     setProgress(0);
     const interval = setInterval(() => {
@@ -38,19 +44,59 @@ const ImageUpload = ({ onImageUpload }: ImageUploadProps) => {
           onImageUpload(true);
           toast({
             title: "Dish Recognition Complete",
-            description: "We've identified your dish and prepared a recipe for you!",
+            description:
+              "We've identified your dish and prepared a recipe for you!",
             duration: 3000,
           });
           return 100;
         }
         return prev + 10;
       });
-    }, 300);
+    }, 800);
+
+    try {
+      const session = await getPromptAi();
+      const caputureImage = document.getElementById("uploaded-image");
+      const start = performance.now()
+      const result = await session.prompt([
+        `
+          You are a professional chef with extensive experience in identifying dishes from both text and images. Given a visual description (or image if specified) of a dish, you are tasked with determining the most likely food name and providing a matching percentage. e. Your response should be structured as a valid JSON object with the following format:
+
+          {
+  "dish_name": "The most likely dish name.",
+  "match_percentage": "A numeric percentage indicating the likelihood that the dish name matches the description (e.g., 90)"
+}
+
+
+          If the description is insufficient to confidently determine the dish name, provide a list of possible dish names and a matching percentage for each. Make sure the percentages reflect the certainty of each possibility (e.g., 70%, 50%, etc.).
+            `,
+        { type: "image", content: caputureImage },
+      ]);
+
+      const _result = safeParse(result)
+      setData({
+        dish_name: _result.dish_name,
+        match_percentage: _result.match_percentage,
+      })
+    } catch (error) {
+      toast({
+        title: "Error Occurred",
+        description:
+          error.message || "An error occurred while processing the image",
+        duration: 3000,
+      });
+      console.log("error", error);
+    }
   };
 
   const handleRemoveImage = () => {
     setImage(null);
     onImageUpload(false);
+  };
+
+  const onCaptureImage = (image: string) => {
+    setImage(image);
+    processImage();
   };
 
   return (
@@ -63,30 +109,48 @@ const ImageUpload = ({ onImageUpload }: ImageUploadProps) => {
           className="hidden"
           id="image-upload"
         />
-        
+
         {!image ? (
-          <label
-            htmlFor="image-upload"
-            className="flex flex-col items-center space-y-4 cursor-pointer"
-          >
-            <div className="p-4 rounded-full bg-primary/5 hover:bg-primary/10 transition-colors dark:bg-primary/10 dark:hover:bg-primary/20">
-              <Camera className="w-8 h-8 text-primary" />
-            </div>
-            <div className="flex flex-col items-center gap-2 text-center">
-              <span className="font-medium">Take a photo or upload an image of any dish</span>
-              <p className="text-sm text-muted-foreground max-w-md">
-                Our AI will identify the dish, list ingredients, and provide cooking instructions
-              </p>
-              <div className="flex items-center gap-2 mt-2">
-                <Upload className="w-4 h-4" />
-                <span>Click here to start</span>
+          <>
+            <div className="flex flex-col items-center space-y-4 cursor-pointer">
+              <div className="p-4 rounded-full bg-primary/5 hover:bg-primary/10 transition-colors dark:bg-primary/10 dark:hover:bg-primary/20">
+                <CameraModal onAccept={onCaptureImage}>
+                  <Camera className="w-8 h-8 text-primary" />
+                </CameraModal>
+              </div>
+              <div className="flex flex-col items-center gap-2 text-center">
+                <span className="font-medium">
+                  Take a photo or upload an image of any dish
+                </span>
+                <p className="text-sm text-muted-foreground max-w-md">
+                  Our AI will identify the dish, list ingredients, and provide
+                  cooking instructions
+                </p>
+              </div>
+
+              <TextDivider>OR</TextDivider>
+
+              <div className="col-span-2 mt-6 text-center">
+                <Button
+                  onClick={() =>
+                    document.getElementById("image-upload")?.click()
+                  }
+                  size="lg"
+                  className="bg-gradient-to-r from-primary to-primary/80"
+                >
+                  <Image className="w-5 h-5 mr-2" /> Upload a Dish Photo
+                </Button>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Take a photo of any prepared dish or meal to get the recipe
+                </p>
               </div>
             </div>
-          </label>
+          </>
         ) : (
           <div className="relative w-full">
             <img
               src={image}
+              id="uploaded-image"
               alt="Uploaded food"
               className="w-full h-full object-cover rounded-xl"
             />
@@ -102,7 +166,9 @@ const ImageUpload = ({ onImageUpload }: ImageUploadProps) => {
         {isProcessing && (
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center gap-4">
             <Progress value={progress} className="w-56" />
-            <p className="text-white text-sm">AI is analyzing your dish and generating a recipe...</p>
+            <p className="text-white text-sm">
+              AI is analyzing your dish and generating a recipe...
+            </p>
           </div>
         )}
       </div>

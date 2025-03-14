@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Check,
   ThumbsUp,
@@ -9,14 +9,10 @@ import {
   Plus,
   Minus,
   Users,
-  Image,
   Info,
-  AlertTriangle,
   ChefHat,
   PackageOpen,
   Utensils,
-  ChevronDown,
-  ChevronUp,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
@@ -25,6 +21,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import Timer from "./Timer";
 import { useToast } from "@/components/ui/use-toast";
 import { productList } from "@/mock/product-list";
+import { useRecipe } from "@/context/recipe";
 
 interface Ingredient {
   name: string;
@@ -100,6 +97,7 @@ const adjustIngredientAmount = (
 
 const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
   const { toast } = useToast();
+  const { dish_name, match_percentage } = useRecipe();
   const [activeTimers, setActiveTimers] = useState<Record<number, boolean>>({});
   const [completedSteps, setCompletedSteps] = useState<Record<number, boolean>>(
     {}
@@ -148,7 +146,6 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
     setAdjustedIngredients(updated);
   };
 
-
   return (
     <div className="w-full max-w-6xl mx-auto p-6">
       {imageUploaded ? (
@@ -168,18 +165,16 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
                   <ChefHat className="w-8 h-8 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium">
-                    Fresh Tomato Garlic Pasta
-                  </h3>
+                  <h3 className="text-lg font-medium">{dish_name}</h3>
                   <div className="flex items-center mt-1">
                     <div className="w-full max-w-xs bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
                       <div
                         className="bg-green-600 h-2.5 rounded-full"
-                        style={{ width: `${mainDishConfidence}%` }}
+                        style={{ width: `${match_percentage}%` }}
                       ></div>
                     </div>
                     <span className="ml-2 text-sm font-medium">
-                      {mainDishConfidence}% confidence
+                      {match_percentage}% confidence
                     </span>
                   </div>
                 </div>
@@ -402,19 +397,6 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
               recreate the dish. Just upload a photo to get started.
             </p>
           </Card>
-
-          <div className="col-span-2 mt-6 text-center">
-            <Button
-              onClick={() => document.getElementById("image-upload")?.click()}
-              size="lg"
-              className="bg-gradient-to-r from-primary to-primary/80"
-            >
-              <Image className="w-5 h-5 mr-2" /> Upload a Dish Photo
-            </Button>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Take a photo of any prepared dish or meal to get the recipe
-            </p>
-          </div>
         </div>
       )}
     </div>
@@ -443,7 +425,12 @@ const ProductCard = ({ product }: { product: Product }) => {
         <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
           <span>{product.shopName}</span>
         </div>
-        <Button onClick={() => window.open(product.link, "_blank")} variant="outline" size="sm" className="w-full mt-3">
+        <Button
+          onClick={() => window.open(product.link, "_blank")}
+          variant="outline"
+          size="sm"
+          className="w-full mt-3"
+        >
           <ExternalLink className="w-3.5 h-3.5 mr-1" />
           View Product
         </Button>

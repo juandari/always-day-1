@@ -10,10 +10,7 @@ import { Button } from "@/components/ui/button";
 import Timer from "./Timer";
 import { Card } from "@/components/ui/card";
 import Mock from "@/mock/cooking-instruction";
-
-function cleanJSON(rawString) {
-  return rawString.replace(/```(?:json)?\n?|```/g, '').trim();
-}
+import { cleanJSON } from "@/lib/clean-json";
 
 const CookingInstructions = () => {
   const [activeTimers, setActiveTimers] = useState<Record<number, boolean>>({});

@@ -1,13 +1,18 @@
 export async function getPromptAi() {
-  const aistatus = await self.ai.languageModel.availability();
+  const aistatus = await window.ai.languageModel.availability();
 
   if (aistatus === "available") {
-    const session = await self.ai.languageModel.create();
+    const session = await window.ai.languageModel.create({
+      systemPrompt:
+        "You are a professional chef with extensive experience in identifying dishes from both text and images",
+    });
 
     return session;
   }
 
-  if(aistatus === "unavailable") {
-    throw new Error("AI model is currently unavailable. Please try again later.");
+  if (aistatus === "unavailable") {
+    throw new Error(
+      "AI model is currently unavailable. Please try again later."
+    );
   }
 }

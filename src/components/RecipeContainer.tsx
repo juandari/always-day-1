@@ -1,11 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Check,
-  ThumbsUp,
-  ThumbsDown,
-  Timer as TimerIcon,
   ExternalLink,
-  CheckCircle2,
   Plus,
   Minus,
   Users,
@@ -19,15 +15,21 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 import { useToast } from "@/components/ui/use-toast";
-import { productList } from "@/mock/product-list";
+import { getMockProductList } from "@/mock/product-list";
 import { useRecipe } from "@/context/recipe";
 import CookingInstructions from "./CookingInstructions";
+import { Skeleton } from "./ui/skeleton";
+import safeParse from "@/lib/safe-parse";
+import { ingredientListPrompt } from "@/prompts/ingredient-list";
+import { getPromptAi } from "@/lib/get-prompt-ai";
+import { cleanJSON } from "@/lib/clean-json";
 
 interface Ingredient {
   name: string;
+  quantity: number;
+  baseQuantity: number;
+  unit: string;
   confidence: number;
-  amount: string;
-  baseAmount: string;
 }
 
 interface Step {
@@ -38,62 +40,21 @@ interface Step {
 interface Product {
   name: string;
   price: string;
-  link: string;
+  link: string | URL;
   image: string;
   shopName: string;
   rating: string;
-}
-
-interface AlternativeDish {
-  name: string;
-  confidence: number;
-  image: string;
 }
 
 interface RecipeContainerProps {
   imageUploaded: boolean;
 }
 
-const ingredients: Ingredient[] = [
-  {
-    name: "Fresh Tomatoes",
-    confidence: 95,
-    amount: "4 medium",
-    baseAmount: "4 medium",
-  },
-  { name: "Olive Oil", confidence: 88, amount: "2 tbsp", baseAmount: "2 tbsp" },
-  {
-    name: "Garlic",
-    confidence: 92,
-    amount: "3 cloves",
-    baseAmount: "3 cloves",
-  },
-];
-
 const steps: Step[] = [
   { text: "Dice tomatoes into small cubes", time: 5 },
   { text: "Heat olive oil in a pan", time: 2 },
   { text: "Add minced garlic and sauté until fragrant", time: 3 },
 ];
-
-const adjustIngredientAmount = (
-  baseAmount: string,
-  servings: number
-): string => {
-  const match = baseAmount.match(/^(\d+(?:\.\d+)?)\s*(.*)$/);
-
-  if (!match) return baseAmount;
-
-  const [, numStr, unit] = match;
-  const baseNum = parseFloat(numStr);
-  const adjustedNum = baseNum * servings;
-
-  const formattedNum = Number.isInteger(adjustedNum)
-    ? adjustedNum.toString()
-    : adjustedNum.toFixed(1);
-
-  return `${formattedNum} ${unit}`;
-};
 
 const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
   const { toast } = useToast();
@@ -103,16 +64,68 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
     {}
   );
   const [servings, setServings] = useState(1);
-  const [adjustedIngredients, setAdjustedIngredients] = useState([
-    ...ingredients,
-  ]);
-  const mainDishConfidence = 92;
+  const [adjustedIngredients, setAdjustedIngredients] = useState<Ingredient[]>(
+    []
+  );
+  const [loadingIngredients, setLoadingIngredients] = useState(true);
+  const [productList, setProductList] = useState<{
+    ingredients: Product[];
+    tools: Product[];
+  }>({
+    ingredients: [],
+    tools: [],
+  });
+
+  useEffect(() => {
+    const getIngredients = async (dishName: string) => {
+      try {
+        const ingredientPrompt = ingredientListPrompt(dishName);
+        const session = await getPromptAi();
+        const promptResult = await session.prompt(ingredientPrompt);
+
+        const cleanResult = cleanJSON(promptResult);
+        console.log(cleanResult, "arjun cleanResult");
+
+        const parsedResult = safeParse(cleanResult) as Omit<
+          Ingredient,
+          "baseQuantity"
+        >[];
+        console.log(parsedResult, "arjun parsedResult");
+
+        setLoadingIngredients(false);
+        const productList = getMockProductList(
+          parsedResult.map((ingredient) => ingredient.name)
+        );
+
+        setProductList(productList);
+
+        setAdjustedIngredients(
+          parsedResult?.map((ingredient) => ({
+            ...ingredient,
+            baseQuantity: Number(ingredient.quantity),
+          }))
+        );
+      } catch (error) {
+        toast({
+          title: "Error Occurred",
+          description:
+            error.message ||
+            "An error occurred while processing the ingredients",
+          duration: 5000,
+        });
+      }
+    };
+
+    if (dish_name) {
+      getIngredients(dish_name);
+    }
+  }, [dish_name]);
 
   const increaseServings = () => {
     if (servings < 10) {
       const newServings = servings + 1;
       setServings(newServings);
-      updateIngredientAmounts(newServings);
+      updateIngredientAmounts(newServings, "increase");
     }
   };
 
@@ -120,16 +133,24 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
     if (servings > 1) {
       const newServings = servings - 1;
       setServings(newServings);
-      updateIngredientAmounts(newServings);
+      updateIngredientAmounts(newServings, "decrease");
     }
   };
 
-  const updateIngredientAmounts = (newServings: number) => {
-    const updated = ingredients.map((ingredient) => ({
-      ...ingredient,
-      amount: adjustIngredientAmount(ingredient.baseAmount, newServings),
-    }));
-    setAdjustedIngredients(updated);
+  const updateIngredientAmounts = (
+    newServings: number,
+    type: "increase" | "decrease"
+  ) => {
+    setAdjustedIngredients((prev) => {
+      const updated = prev.map((ingredient) => ({
+        ...ingredient,
+        quantity:
+          type === "increase"
+            ? ingredient.quantity * newServings
+            : ingredient.baseQuantity * newServings,
+      }));
+      return updated;
+    });
   };
 
   return (
@@ -200,26 +221,33 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
                 </div>
               </div>
               <ul className="space-y-3">
-                {adjustedIngredients.map((ingredient, index) => (
-                  <li
-                    key={index}
-                    className="fade-in flex items-center justify-between p-3 rounded-lg bg-white/5 backdrop-blur-sm dark:bg-black/20"
-                    style={{ animationDelay: `${index * 100}ms` }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-green-500" />
-                      <span>{ingredient.name}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium">
-                        {ingredient.amount}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        {ingredient.confidence}% match
-                      </span>
-                    </div>
-                  </li>
-                ))}
+                {loadingIngredients ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-[250px]" />
+                    <Skeleton className="h-4 w-[200px]" />
+                  </div>
+                ) : (
+                  adjustedIngredients?.map((ingredient, index) => (
+                    <li
+                      key={index}
+                      className="fade-in flex items-center justify-between p-3 rounded-lg bg-white/5 backdrop-blur-sm dark:bg-black/20"
+                      style={{ animationDelay: `${index * 100}ms` }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-500" />
+                        <span>{ingredient.name}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium">
+                          {`${ingredient.quantity} ${ingredient.unit}`}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          {ingredient.confidence}% match
+                        </span>
+                      </div>
+                    </li>
+                  ))
+                )}
               </ul>
             </Card>
             <CookingInstructions />
@@ -228,8 +256,8 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
           <Card className="mt-8 p-6 glass">
             <Tabs defaultValue="exact" className="w-full">
               <TabsList className="grid w-full grid-cols-2 glass">
-                <TabsTrigger value="exact">Recommended Ingredients</TabsTrigger>
-                <TabsTrigger value="tools">Cooking Tools</TabsTrigger>
+                <TabsTrigger value="exact">Ingredients Links</TabsTrigger>
+                <TabsTrigger value="tools">Tools Links</TabsTrigger>
               </TabsList>
               <TabsContent value="exact" className="mt-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -291,12 +319,18 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
 const ProductCard = ({ product }: { product: Product }) => {
   return (
     <div className="fade-in rounded-lg overflow-hidden glass border border-white/10 dark:border-white/5">
-      <div className="h-72 mx-auto aspect-square overflow-hidden bg-gray-200 dark:bg-gray-800">
-        <img
-          src={product.image}
-          alt={product.name}
-          className="w-full h-full object-contain transition-transform hover:scale-105"
-        />
+      <div className="h-32 overflow-hidden bg-gray-200 dark:bg-gray-800">
+        {product.image ? (
+          <img
+            src={product.image}
+            alt={product.name}
+            className="w-full h-full object-contain transition-transform hover:scale-105"
+          />
+        ) : (
+          <p className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
+            Product Image
+          </p>
+        )}
       </div>
       <div className="p-4">
         <h3 className="font-medium truncate">{product.name}</h3>

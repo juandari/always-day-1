@@ -1,11 +1,10 @@
-export const productList = {
-  ingredients: [
-    {
-      name: "Tepung",
-      price: "Rp13.200",
-      link: "https://www.tokopedia.com/find/tepung",
-      image:
-          "https://images.tokopedia.net/img/cache/300-square/hDjmkQ/2025/1/9/16a34564-0058-4c90-9763-c3707329abe5.jpg",
+/**
+ * [
+      {
+        name: "Tepung",
+        price: "Rp13.200",
+        link: "https://www.tokopedia.com/find/tepung",
+        image: "",
         shopName: "KedaiMart Official Store",
         rating: "4.7",
       },
@@ -13,8 +12,7 @@ export const productList = {
         name: "Minyak Goreng",
         price: "Rp24.900",
         link: "https://www.tokopedia.com/find/minyak-goreng",
-        image:
-          "https://images.tokopedia.net/img/cache/300-square/VqbcmM/2024/9/17/8dae7f60-551c-4e96-83d1-e8e70897944a.jpg",
+        image: "",
         shopName: "Zeero Bakery",
         rating: "4.7",
       },
@@ -22,12 +20,23 @@ export const productList = {
         name: "Bawang Merah",
         price: "Rp33.600",
         link: "https://www.tokopedia.com/find/bawang",
-        image:
-          "https://images.tokopedia.net/img/cache/300-square/hDjmkQ/2023/1/11/0f1b8485-7b7b-4e32-a6d8-9a8db4b0222a.jpg",
+        image: "",
         shopName: "STP Bumbu",
         rating: "4.7",
       },
-    ],
+    ]
+ */
+
+export const getMockProductList = (ingredients: string[]) => {
+  return {
+    ingredients: ingredients.map((ingredient) => ({
+      name: ingredient,
+      price: "Rp13.200",
+      link: new URL(`https://www.tokopedia.com/find/${ingredient}`),
+      image: "",
+      shopName: "KedaiMart Official Store",
+      rating: "5.0",
+    })),
     tools: [
       {
         name: "Panci",
@@ -56,5 +65,6 @@ export const productList = {
       shopName: "MyHartono",
       rating: "5.0",
     },
-  ],
+    ],
+  };
 };

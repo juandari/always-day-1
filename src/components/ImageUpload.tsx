@@ -15,7 +15,7 @@ interface ImageUploadProps {
 }
 
 const ImageUpload = ({ onImageUpload }: ImageUploadProps) => {
-  const {setData} = useRecipe()
+  const { setData } = useRecipe();
 
   const [image, setImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -58,17 +58,16 @@ const ImageUpload = ({ onImageUpload }: ImageUploadProps) => {
     try {
       const session = await getPromptAi();
       const caputureImage = document.getElementById("uploaded-image");
-
       const result = await session.prompt([
         identifyFoodPrompt,
         { type: "image", content: caputureImage },
       ]);
 
-      const _result = safeParse(result)
+      const _result = safeParse(result);
       setData({
         dish_name: _result.dish_name,
         match_percentage: _result.match_percentage,
-      })
+      });
     } catch (error) {
       toast({
         title: "Error Occurred",

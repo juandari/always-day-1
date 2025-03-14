@@ -9,7 +9,10 @@ declare global {
     };
   }
 
+
+  
   interface LanguageModelSession {
-    prompt: (input: string) => Promise<string>;
+     prompt(input: [string, { type: "image" | "audio"; content: any }]): Promise<string>;
+     prompt(input: string): Promise<string>;
   }
 }

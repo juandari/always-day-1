@@ -58,7 +58,7 @@ const ImageUpload = ({ onImageUpload }: ImageUploadProps) => {
     try {
       const session = await getPromptAi();
       const caputureImage = document.getElementById("uploaded-image");
-      const start = performance.now()
+
       const result = await session.prompt([
         identifyFoodPrompt,
         { type: "image", content: caputureImage },

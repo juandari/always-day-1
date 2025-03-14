@@ -18,11 +18,11 @@ import { useToast } from "@/components/ui/use-toast";
 import { getMockProductList } from "@/mock/product-list";
 import { useRecipe } from "@/context/recipe";
 import CookingInstructions from "./CookingInstructions";
-import { Skeleton } from "./ui/skeleton";
 import safeParse from "@/lib/safe-parse";
 import { ingredientListPrompt } from "@/prompts/ingredient-list";
 import { getPromptAi } from "@/lib/get-prompt-ai";
 import { cleanJSON } from "@/lib/clean-json";
+import { LoadingList } from "./ui/loading-skeleton";
 
 interface Ingredient {
   name: string;
@@ -58,7 +58,7 @@ const steps: Step[] = [
 
 const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
   const { toast } = useToast();
-  const { dish_name, match_percentage } = useRecipe();
+  const { dish_name, match_percentage, setIngredients } = useRecipe();
   const [activeTimers, setActiveTimers] = useState<Record<number, boolean>>({});
   const [completedSteps, setCompletedSteps] = useState<Record<number, boolean>>(
     {}
@@ -90,12 +90,15 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
           Ingredient,
           "baseQuantity"
         >[];
+
         console.log(parsedResult, "arjun parsedResult");
 
         setLoadingIngredients(false);
-        const productList = getMockProductList(
-          parsedResult.map((ingredient) => ingredient.name)
-        );
+
+        const ingredients = parsedResult.map((ingredient) => ingredient.name);
+        const productList = getMockProductList(ingredients);
+
+        setIngredients(ingredients);
 
         setProductList(productList);
 
@@ -119,13 +122,13 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
     if (dish_name) {
       getIngredients(dish_name);
     }
-  }, [dish_name]);
+  }, [dish_name, setIngredients, toast]);
 
   const increaseServings = () => {
     if (servings < 10) {
       const newServings = servings + 1;
       setServings(newServings);
-      updateIngredientAmounts(newServings, "increase");
+      updateIngredientAmounts(newServings);
     }
   };
 
@@ -133,21 +136,15 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
     if (servings > 1) {
       const newServings = servings - 1;
       setServings(newServings);
-      updateIngredientAmounts(newServings, "decrease");
+      updateIngredientAmounts(newServings);
     }
   };
 
-  const updateIngredientAmounts = (
-    newServings: number,
-    type: "increase" | "decrease"
-  ) => {
+  const updateIngredientAmounts = (newServings: number) => {
     setAdjustedIngredients((prev) => {
       const updated = prev.map((ingredient) => ({
         ...ingredient,
-        quantity:
-          type === "increase"
-            ? ingredient.quantity * newServings
-            : ingredient.baseQuantity * newServings,
+        quantity: ingredient.baseQuantity * newServings,
       }));
       return updated;
     });
@@ -222,10 +219,7 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
               </div>
               <ul className="space-y-3">
                 {loadingIngredients ? (
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-[250px]" />
-                    <Skeleton className="h-4 w-[200px]" />
-                  </div>
+                  <LoadingList className="mt-4" />
                 ) : (
                   adjustedIngredients?.map((ingredient, index) => (
                     <li

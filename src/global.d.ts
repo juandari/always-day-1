@@ -13,11 +13,8 @@ declare global {
   }
   interface LanguageModelSession {
     prompt(
-      input: [string, { type: "image" | "audio"; content: any }]
-    ): Promise<string>;
-    prompt: (
-      input: string,
+      input: [string, { type: "image" | "audio"; content: any }] | string,
       options?: AIAssistantPromptOptions
-    ) => Promise<string>;
+    ): Promise<string>;
   }
 }

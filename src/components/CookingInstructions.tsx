@@ -9,57 +9,22 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import Timer from "./Timer";
 import { Card } from "@/components/ui/card";
+import { LoadingList } from "@/components/ui/loading-skeleton";
+import { useRecipe } from "@/context/recipe";
 import Mock from "@/mock/cooking-instruction";
 import { cleanJSON } from "@/lib/clean-json";
 
-const CookingInstructions = () => {
-  const [activeTimers, setActiveTimers] = useState<Record<number, boolean>>({});
-  const [isLoading, setIsLoading] = useState(true);
-  // const [steps, setSteps] = useState(Mock.instructions);
-  const [steps, setSteps] = useState([]);
-  const [completedSteps, setCompletedSteps] = useState<Record<number, boolean>>(
-    {}
-  );
-  const toggleTimer = (stepIndex: number) => {
-    setActiveTimers((prev) => ({
-      ...prev,
-      [stepIndex]: !prev[stepIndex],
-    }));
-  };
-
-  const toggleStepCompletion = (stepIndex: number) => {
-    setCompletedSteps((prev) => ({
-      ...prev,
-      [stepIndex]: !prev[stepIndex],
-    }));
-  };
-
-  useEffect(() => {
-    const createModel = async () => {
-      const session = await window.ai.languageModel.create();
-      const promptResult = await session.prompt(`
-        Generate a step-by-step cooking guide for making Soto Ayam using only the specified ingredients.  
+function generatePrompt(dish_name: string, ingredients: string[]) {
+  return `
+        Generate a step-by-step cooking guide for making ${dish_name} using only the specified ingredients.  
         Each step should include an estimated time in minutes.  
 
         ### Ingredients (Only Use These):
-        - Chicken pieces  
-        - Chicken stock or broth  
-        - Onion (finely chopped)  
-        - Garlic cloves (minced)  
-        - Ginger (sliced or grated)  
-        - Lemongrass (bruised)  
+        ${ingredients.map((ing) => `- ${ing}`).join("\n")}  
 
         ### Output Format:
         Return a valid JSON object with the following structure:
         {
-          "ingredients": [
-            "Chicken pieces",
-            "Chicken stock or broth",
-            "Onion, finely chopped",
-            "Garlic cloves, minced",
-            "Ginger, sliced or grated",
-            "Lemongrass, bruised"
-          ],
           "instructions": [
             {
               "step": "Step title here...", <-- without time minutes
@@ -72,12 +37,46 @@ const CookingInstructions = () => {
         - Ensure the JSON is properly formatted.
         - Do **not** add extra ingredients or modify the cooking process.
         - Use a natural cooking sequence from preparation to serving.  
-      `);
-      // console.log('#promp result:', promptResult);
+      `;
+}
+
+const CookingInstructions = () => {
+  const [activeTimers, setActiveTimers] = useState<Record<number, boolean>>({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [steps, setSteps] = useState([]);
+  const { ingredients, dish_name } = useRecipe();
+  const [completedSteps, setCompletedSteps] = useState<Record<number, boolean>>(
+    {}
+  );
+  const toggleTimer = (stepIndex: number) => {
+    setActiveTimers((prev) => ({
+      ...prev,
+      [stepIndex]: !prev[stepIndex],
+    }));
+  };
+
+  //console.log(ingredients);
+
+  const toggleStepCompletion = (stepIndex: number) => {
+    setCompletedSteps((prev) => ({
+      ...prev,
+      [stepIndex]: !prev[stepIndex],
+    }));
+  };
+
+  useEffect(() => {
+    const createModel = async () => {
+      const session = await window.ai.languageModel.create();
+      const generatedPrompt = generatePrompt(dish_name, ingredients);
+
+      //console.log('#generatedPrompt', generatedPrompt);
+
+      const promptResult = await session.prompt(generatedPrompt);
+
+      //console.log('#promptResult', promptResult);
 
       try {
         const cleanResult = cleanJSON(promptResult);
-        // console.log('#clean result:', cleanResult);
         setIsLoading(false);
         const parsedResult = JSON.parse(cleanResult);
         setSteps(parsedResult.instructions);
@@ -86,8 +85,10 @@ const CookingInstructions = () => {
       }
     };
 
-    createModel();
-  }, []);
+    if (ingredients && ingredients.length > 0) {
+      createModel();
+    }
+  }, [ingredients, dish_name]);
 
   // console.log(steps);
 
@@ -98,7 +99,7 @@ const CookingInstructions = () => {
       </h2>
       <div className="space-y-0">
         {isLoading ? (
-          <div>Loading...</div>
+          <LoadingList className="mt-4" />
         ) : (
           steps.map((step, index) => (
             <div

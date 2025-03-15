@@ -39,7 +39,7 @@ export const getMockProductList = (ingredients: string[]) => {
     })),
     tools: [
       {
-        name: "Panci",
+        name: "Pan",
         price: "Rp13.200",
         link: "https://www.tokopedia.com/find/panci",
         image:
@@ -48,7 +48,7 @@ export const getMockProductList = (ingredients: string[]) => {
         rating: "4.7",
       },
       {
-        name: "Pisau Dapur",
+        name: "Kitchen Knife",
         price: "Rp130.200",
         link: "https://www.tokopedia.com/find/pisau",
         image:
@@ -57,8 +57,8 @@ export const getMockProductList = (ingredients: string[]) => {
         rating: "4.8",
       },
       {
-        name: "Kulkas",
-        price: "Rp3.000.000",
+        name: "Spoon",
+        price: "Rp300.000",
         link: "https://www.tokopedia.com/find/kulkas",
         image:
           "https://images.tokopedia.net/img/cache/300-square/VqbcmM/2024/4/6/f1ee572f-1f9d-4493-9856-12674817d36f.jpg",

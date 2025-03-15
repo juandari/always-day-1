@@ -84,14 +84,11 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
         const promptResult = await session.prompt(ingredientPrompt);
 
         const cleanResult = cleanJSON(promptResult);
-        console.log(cleanResult, "arjun cleanResult");
 
         const parsedResult = safeParse(cleanResult) as Omit<
           Ingredient,
           "baseQuantity"
         >[];
-
-        console.log(parsedResult, "arjun parsedResult");
 
         setLoadingIngredients(false);
 
@@ -313,7 +310,7 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
 const ProductCard = ({ product }: { product: Product }) => {
   return (
     <div className="fade-in rounded-lg overflow-hidden glass border border-white/10 dark:border-white/5">
-      <div className="h-32 overflow-hidden bg-gray-200 dark:bg-gray-800">
+      {/* <div className="h-32 overflow-hidden bg-gray-200 dark:bg-gray-800">
         {product.image ? (
           <img
             src={product.image}
@@ -325,7 +322,7 @@ const ProductCard = ({ product }: { product: Product }) => {
             Product Image
           </p>
         )}
-      </div>
+      </div> */}
       <div className="p-4">
         <h3 className="font-medium truncate">{product.name}</h3>
         <div className="flex justify-between items-center mt-2">
@@ -335,9 +332,9 @@ const ProductCard = ({ product }: { product: Product }) => {
             <span className="text-xs">{product.rating}</span>
           </div>
         </div>
-        <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
+        {/* <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
           <span>{product.shopName}</span>
-        </div>
+        </div> */}
         <Button
           onClick={() => window.open(product.link, "_blank")}
           variant="outline"

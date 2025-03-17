@@ -15,11 +15,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 import { useToast } from "@/components/ui/use-toast";
-import { getMockProductList } from "@/mock/product-list";
 import { useRecipe } from "@/context/recipe";
 import CookingInstructions from "./CookingInstructions";
 import safeParse from "@/lib/safe-parse";
 import { ingredientListPrompt } from "@/prompts/ingredient-list";
+import { toolListPrompt } from "@/prompts/tool-list";
 import { getPromptAi } from "@/lib/get-prompt-ai";
 import { cleanJSON } from "@/lib/clean-json";
 import { LoadingList } from "./ui/loading-skeleton";
@@ -32,42 +32,24 @@ interface Ingredient {
   confidence: number;
 }
 
-interface Step {
-  text: string;
-  time?: number;
-}
-
 interface Product {
   name: string;
-  price: string;
   link: string | URL;
-  image: string;
-  shopName: string;
-  rating: string;
 }
 
 interface RecipeContainerProps {
   imageUploaded: boolean;
 }
 
-const steps: Step[] = [
-  { text: "Dice tomatoes into small cubes", time: 5 },
-  { text: "Heat olive oil in a pan", time: 2 },
-  { text: "Add minced garlic and sauté until fragrant", time: 3 },
-];
-
 const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
   const { toast } = useToast();
   const { dish_name, match_percentage, setIngredients } = useRecipe();
-  const [activeTimers, setActiveTimers] = useState<Record<number, boolean>>({});
-  const [completedSteps, setCompletedSteps] = useState<Record<number, boolean>>(
-    {}
-  );
   const [servings, setServings] = useState(1);
   const [adjustedIngredients, setAdjustedIngredients] = useState<Ingredient[]>(
     []
   );
   const [loadingIngredients, setLoadingIngredients] = useState(true);
+  const [loadingTools, setLoadingTools] = useState(true);
   const [productList, setProductList] = useState<{
     ingredients: Product[];
     tools: Product[];
@@ -92,8 +74,18 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
 
         setLoadingIngredients(false);
 
-        const ingredients = parsedResult.map((ingredient) => ingredient.name);
-        const productList = getMockProductList(ingredients);
+        const ingredients = parsedResult.map((ingredient) =>
+          ingredient.name.replace(/\b\w/g, (char) => char.toUpperCase())
+        );
+        console.warn("[DEBUG] ingredients", ingredients);
+
+        const productList = {
+          ingredients: ingredients.map((ingredient) => ({
+            name: ingredient,
+            link: new URL(`https://www.tokopedia.com/find/${ingredient}`),
+          })),
+          tools: [],
+        };
 
         setIngredients(ingredients);
 
@@ -117,7 +109,47 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
     };
 
     if (dish_name) {
-      getIngredients(dish_name);
+      getIngredients(dish_name).then(async () => {
+        try {
+          const session = await getPromptAi();
+          const toolPrompt = toolListPrompt(dish_name);
+          const promptResultForTools = await session.prompt(toolPrompt);
+          const cleanResultTool = cleanJSON(promptResultForTools);
+
+          const parsedResultTool = safeParse(cleanResultTool) as Omit<
+            Ingredient,
+            "baseQuantity"
+          >[];
+
+          const tools = parsedResultTool.map((ingredient) =>
+            ingredient.name.replace(/\b\w/g, (char) => char.toUpperCase())
+          );
+
+          console.warn("[DEBUG] tools", tools);
+
+          const productList = {
+            tools: tools.map((tool) => ({
+              name: tool,
+              link: new URL(`https://www.tokopedia.com/find/${tool}`),
+            })),
+            ingredients: [],
+          };
+
+          setProductList((prev) => ({
+            ingredients: prev.ingredients,
+            tools: productList.tools,
+          }));
+        } catch (error) {
+          toast({
+            title: "Error Occurred",
+            description:
+              error.message || "An error occurred while processing the tools",
+            duration: 5000,
+          });
+        } finally {
+          setLoadingTools(false);
+        }
+      });
     }
   }, [dish_name, setIngredients, toast]);
 
@@ -245,26 +277,37 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
           </div>
 
           <Card className="mt-8 p-6 glass">
-            <Tabs defaultValue="exact" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 glass">
-                <TabsTrigger value="exact">Ingredients Links</TabsTrigger>
-                <TabsTrigger value="tools">Tools Links</TabsTrigger>
-              </TabsList>
-              <TabsContent value="exact" className="mt-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {productList.ingredients.map((product) => (
-                    <ProductCard key={product.name} product={product} />
-                  ))}
-                </div>
-              </TabsContent>
-              <TabsContent value="tools" className="mt-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {productList.tools.map((product) => (
-                    <ProductCard key={product.name} product={product} />
-                  ))}
-                </div>
-              </TabsContent>
-            </Tabs>
+            <h2 className="text-xl font-semibold mb-4 flex gap-2">
+              Shop Now at{" "}
+              <img src="https://images.tokopedia.net/assets-tokopedia-lite/v2/zeus/production/e5b8438b.svg" />
+            </h2>
+            <p className="text-sm font-semibold mb-4">
+              Any missing ingredients or tools? we've got your back!
+            </p>
+            {loadingTools ? (
+              <LoadingList className="mt-4" />
+            ) : (
+              <Tabs defaultValue="exact" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 glass">
+                  <TabsTrigger value="exact">Ingredients Links</TabsTrigger>
+                  <TabsTrigger value="tools">Tools Links</TabsTrigger>
+                </TabsList>
+                <TabsContent value="exact" className="mt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {productList.ingredients.map((product) => (
+                      <ProductCard key={product.name} product={product} />
+                    ))}
+                  </div>
+                </TabsContent>
+                <TabsContent value="tools" className="mt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {productList.tools.map((product) => (
+                      <ProductCard key={product.name} product={product} />
+                    ))}
+                  </div>
+                </TabsContent>
+              </Tabs>
+            )}
           </Card>
         </>
       ) : (
@@ -310,31 +353,8 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
 const ProductCard = ({ product }: { product: Product }) => {
   return (
     <div className="fade-in rounded-lg overflow-hidden glass border border-white/10 dark:border-white/5">
-      {/* <div className="h-32 overflow-hidden bg-gray-200 dark:bg-gray-800">
-        {product.image ? (
-          <img
-            src={product.image}
-            alt={product.name}
-            className="w-full h-full object-contain transition-transform hover:scale-105"
-          />
-        ) : (
-          <p className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
-            Product Image
-          </p>
-        )}
-      </div> */}
       <div className="p-4">
         <h3 className="font-medium truncate">{product.name}</h3>
-        <div className="flex justify-between items-center mt-2">
-          <span className="text-sm font-semibold">{product.price}</span>
-          <div className="flex items-center gap-1">
-            <span className="text-yellow-500">★</span>
-            <span className="text-xs">{product.rating}</span>
-          </div>
-        </div>
-        {/* <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
-          <span>{product.shopName}</span>
-        </div> */}
         <Button
           onClick={() => window.open(product.link, "_blank")}
           variant="outline"
@@ -342,7 +362,7 @@ const ProductCard = ({ product }: { product: Product }) => {
           className="w-full mt-3"
         >
           <ExternalLink className="w-3.5 h-3.5 mr-1" />
-          View Product
+          Buy
         </Button>
       </div>
     </div>

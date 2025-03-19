@@ -60,22 +60,16 @@ const useHistory = () => {
 
   const updateRecipeIngredients = (ingredients: Ingredient[]) => {
     const id = searchParams.get("recipe_id");
-
-    console.warn("[DEBUG] id on updateRecipeIngredients: ", id);
     update({ key: id, data: { ingredients } });
   };
 
   const updateRecipeInstructions = (instructions: Instruction[]) => {
     const id = searchParams.get("recipe_id");
-
-    console.warn("[DEBUG] id on updateRecipeInstructions: ", id);
     update({ key: id, data: { instructions } });
   };
 
   const updateRecipeTools = (tools: Tool[]) => {
     const id = searchParams.get("recipe_id");
-
-    console.warn("[DEBUG] id on updateRecipeTools: ", id);
     update({ key: id, data: { tools } });
   };
 

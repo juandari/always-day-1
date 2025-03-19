@@ -1,3 +1,5 @@
+import { DATABASE_NAME, TABLE_NAME } from "./constants";
+
 interface Props {
   dbName?: string;
   storeName?: string;
@@ -7,7 +9,12 @@ interface Props {
 }
 
 function writeToIndexedDB(props: Props): Promise<IDBValidKey> {
-  const { dbName = "recipe_db", storeName = "recipe", key = "", data } = props;
+  const {
+    dbName = DATABASE_NAME,
+    storeName = TABLE_NAME,
+    key = "",
+    data,
+  } = props;
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(dbName, 1);
 
@@ -23,24 +30,15 @@ function writeToIndexedDB(props: Props): Promise<IDBValidKey> {
       const transaction = db.transaction(storeName, "readwrite");
       const store = transaction.objectStore(storeName);
       const recipe = store.get(key);
-      console.log("[LOGGER:DB] (PREPARE) edit data payload: ", data);
 
       recipe.onsuccess = () => {
         const updateRequest = store.put({ ...recipe.result, ...data, id: key });
 
         updateRequest.onsuccess = () => {
-          console.log(
-            "[LOGGER:DB] (SUCCESS) edit data response: ",
-            updateRequest.result
-          );
           resolve(updateRequest.result);
         };
 
         updateRequest.onerror = (e) => {
-          console.log(
-            "[LOGGER:DB] (FAILED) edit data response: ",
-            updateRequest.error.message
-          );
           reject(updateRequest.error);
         };
 

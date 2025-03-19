@@ -19,8 +19,14 @@ const useHistory = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const navigateToRecipeDetail = (id: string) => {
-    window.location.href =
-      window.location.href + `?recipe_id=${id}&is_prefill=${1}`;
+    const newUrl = new URL(window.location.href);
+    const newParams = new URLSearchParams(newUrl.searchParams);
+    newParams.delete("recipe_id");
+    newParams.delete("is_prefill");
+    newParams.set("recipe_id", id);
+    newParams.set("is_prefill", "1");
+
+    window.location.href = newUrl.pathname + "?" + newParams.toString();
   };
 
   const initializeRecipeResult = (

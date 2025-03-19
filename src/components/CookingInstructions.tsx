@@ -46,6 +46,8 @@ const CookingInstructions = () => {
     useHistory();
   const [activeTimers, setActiveTimers] = useState<Record<number, boolean>>({});
   const [isPrefillFinished, setIsPrefillFinished] = useState(false);
+  const [isGetInstructionsTriggered, setIsGetInstructionsTriggered] =
+    useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [steps, setSteps] = useState([]);
   const { ingredients, dish_name } = useRecipe();
@@ -90,10 +92,22 @@ const CookingInstructions = () => {
       }
     };
 
-    if (ingredients && ingredients.length > 0 && !isPrefillExpected()) {
+    if (
+      ingredients &&
+      ingredients.length > 0 &&
+      !isGetInstructionsTriggered &&
+      !isPrefillExpected()
+    ) {
+      setIsGetInstructionsTriggered(true);
       createModel();
     }
-  }, [ingredients, dish_name, updateRecipeInstructions, isPrefillExpected]);
+  }, [
+    ingredients,
+    dish_name,
+    updateRecipeInstructions,
+    isPrefillExpected,
+    isGetInstructionsTriggered,
+  ]);
 
   useEffect(() => {
     const handlePrefill = async () => {

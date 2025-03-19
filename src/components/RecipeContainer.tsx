@@ -68,6 +68,9 @@ const RecipeContainer = ({
     ingredients: [],
     tools: [],
   });
+
+  const [isGetIngredientsTriggered, setIsGetIngredientsTriggered] =
+    useState(false);
   const [isPrefillFinished, setIsPrefillFinished] = useState(false);
 
   useEffect(() => {
@@ -121,7 +124,13 @@ const RecipeContainer = ({
       }
     };
 
-    if (dish_name && !isPrefillExpected()) {
+    if (
+      dish_name &&
+      imageUploaded &&
+      !isGetIngredientsTriggered &&
+      !isPrefillExpected()
+    ) {
+      setIsGetIngredientsTriggered(true);
       getIngredients(dish_name).then(async () => {
         try {
           const session = await getPromptAi();
@@ -167,6 +176,7 @@ const RecipeContainer = ({
   }, [
     dish_name,
     imageUploaded,
+    isGetIngredientsTriggered,
     isPrefillExpected,
     setIngredients,
     toast,
@@ -185,8 +195,8 @@ const RecipeContainer = ({
         match_percentage: detail.confidence,
       });
 
-      const tools = detail.tools.map((ingredient) =>
-        ingredient.name.replace(/\b\w/g, (char) => char.toUpperCase())
+      const tools = detail.tools.map((tool) =>
+        tool.name.replace(/\b\w/g, (char) => char.toUpperCase())
       );
 
       const ingredients = detail.ingredients.map((ingredient) =>
@@ -342,9 +352,9 @@ const RecipeContainer = ({
                         <span className="text-sm font-medium">
                           {`${ingredient.quantity} ${ingredient.unit}`}
                         </span>
-                        <span className="text-sm text-muted-foreground">
+                        {/* <span className="text-sm text-muted-foreground">
                           {ingredient.confidence}% match
-                        </span>
+                        </span> */}
                       </div>
                     </li>
                   ))

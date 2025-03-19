@@ -45,6 +45,7 @@ const CookingInstructions = () => {
   const { updateRecipeInstructions, getRecipeDetail, isPrefillExpected } =
     useHistory();
   const [activeTimers, setActiveTimers] = useState<Record<number, boolean>>({});
+  const [isPrefillFinished, setIsPrefillFinished] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [steps, setSteps] = useState([]);
   const { ingredients, dish_name } = useRecipe();
@@ -101,11 +102,11 @@ const CookingInstructions = () => {
       setSteps(detail.instructions);
       setIsLoading(false);
     };
-    if (isPrefillExpected()) {
+    if (isPrefillExpected() && !isPrefillFinished) {
       handlePrefill();
+      setIsPrefillFinished(true);
     }
-  }, [getRecipeDetail, isPrefillExpected]);
-  // console.log(steps);
+  }, [getRecipeDetail, isPrefillExpected, isPrefillFinished]);
 
   return (
     <Card className="p-6 glass">

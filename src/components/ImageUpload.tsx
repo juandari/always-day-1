@@ -109,9 +109,7 @@ const ImageUpload = ({ onImageUpload }: ImageUploadProps) => {
         match_percentage: _result.match_percentage,
       });
 
-      // TODO: add image to db
       imageToBlob(caputureImage).then((result) => {
-        console.warn("[DEBUG] result", result);
         initializeRecipeResult(
           _result.dish_name,
           _result.match_percentage,
@@ -141,17 +139,13 @@ const ImageUpload = ({ onImageUpload }: ImageUploadProps) => {
   };
 
   useEffect(() => {
-    console.warn("[DEBUG] useEffect ImageUpload");
     const handlePrefill = async () => {
       const detail = await getRecipeDetail();
       const imageURLString = URL.createObjectURL(detail.image);
-      console.warn("[DEBUG] useEffect ImageUpload setImage");
       setImage(imageURLString);
     };
 
     if (isPrefillExpected() && !isPrefillFinished) {
-      console.warn("[DEBUG] isPrefillExpected", isPrefillExpected());
-      console.warn("[DEBUG] isPrefillFinished", isPrefillFinished);
       handlePrefill();
       setIsPrefillFinished(true);
     }

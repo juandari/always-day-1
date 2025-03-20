@@ -22,6 +22,7 @@ import { ingredientListPrompt } from "@/prompts/ingredient-list";
 import { toolListPrompt } from "@/prompts/tool-list";
 import { getPromptAi } from "@/lib/get-prompt-ai";
 import { cleanJSON } from "@/lib/clean-json";
+import useHistory from "@/usecase/useHistory";
 import { LoadingList } from "./ui/loading-skeleton";
 
 interface Ingredient {
@@ -39,11 +40,21 @@ interface Product {
 
 interface RecipeContainerProps {
   imageUploaded: boolean;
+  setImageUploaded: (value: boolean) => void;
 }
 
-const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
+const RecipeContainer = ({
+  imageUploaded,
+  setImageUploaded,
+}: RecipeContainerProps) => {
   const { toast } = useToast();
-  const { dish_name, match_percentage, setIngredients } = useRecipe();
+  const {
+    updateRecipeIngredients,
+    updateRecipeTools,
+    getRecipeDetail,
+    isPrefillExpected,
+  } = useHistory();
+  const { dish_name, match_percentage, setIngredients, setData } = useRecipe();
   const [servings, setServings] = useState(1);
   const [adjustedIngredients, setAdjustedIngredients] = useState<Ingredient[]>(
     []
@@ -57,6 +68,10 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
     ingredients: [],
     tools: [],
   });
+
+  const [isGetIngredientsTriggered, setIsGetIngredientsTriggered] =
+    useState(false);
+  const [isPrefillFinished, setIsPrefillFinished] = useState(false);
 
   useEffect(() => {
     const getIngredients = async (dishName: string) => {
@@ -72,17 +87,18 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
           "baseQuantity"
         >[];
 
+        updateRecipeIngredients(parsedResult);
+
         setLoadingIngredients(false);
 
         const ingredients = parsedResult.map((ingredient) =>
           ingredient.name.replace(/\b\w/g, (char) => char.toUpperCase())
         );
-        console.warn("[DEBUG] ingredients", ingredients);
 
         const productList = {
           ingredients: ingredients.map((ingredient) => ({
             name: ingredient,
-            link: new URL(`https://www.tokopedia.com/find/${ingredient}`),
+            link: new URL(`https://www.tokopedia.com/find/${ingredient}`).href,
           })),
           tools: [],
         };
@@ -108,7 +124,13 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
       }
     };
 
-    if (dish_name) {
+    if (
+      dish_name &&
+      imageUploaded &&
+      !isGetIngredientsTriggered &&
+      !isPrefillExpected()
+    ) {
+      setIsGetIngredientsTriggered(true);
       getIngredients(dish_name).then(async () => {
         try {
           const session = await getPromptAi();
@@ -121,16 +143,16 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
             "baseQuantity"
           >[];
 
+          updateRecipeTools(parsedResultTool);
+
           const tools = parsedResultTool.map((ingredient) =>
             ingredient.name.replace(/\b\w/g, (char) => char.toUpperCase())
           );
 
-          console.warn("[DEBUG] tools", tools);
-
           const productList = {
             tools: tools.map((tool) => ({
               name: tool,
-              link: new URL(`https://www.tokopedia.com/find/${tool}`),
+              link: new URL(`https://www.tokopedia.com/find/${tool}`).href,
             })),
             ingredients: [],
           };
@@ -151,7 +173,73 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
         }
       });
     }
-  }, [dish_name, setIngredients, toast]);
+  }, [
+    dish_name,
+    imageUploaded,
+    isGetIngredientsTriggered,
+    isPrefillExpected,
+    setIngredients,
+    toast,
+    updateRecipeIngredients,
+    updateRecipeTools,
+  ]);
+
+  useEffect(() => {
+    const handlePrefill = async () => {
+      const detail = await getRecipeDetail();
+
+      if (!detail) return;
+
+      setData({
+        dish_name: detail.name,
+        match_percentage: detail.confidence,
+      });
+
+      const tools = detail.tools.map((tool) =>
+        tool.name.replace(/\b\w/g, (char) => char.toUpperCase())
+      );
+
+      const ingredients = detail.ingredients.map((ingredient) =>
+        ingredient.name.replace(/\b\w/g, (char) => char.toUpperCase())
+      );
+
+      const productList = {
+        ingredients: ingredients.map((ingredient) => ({
+          name: ingredient,
+          link: new URL(`https://www.tokopedia.com/find/${ingredient}`).href,
+        })),
+        tools: tools.map((tool) => ({
+          name: tool,
+          link: new URL(`https://www.tokopedia.com/find/${tool}`).href,
+        })),
+      };
+
+      setIngredients(ingredients);
+      setProductList(productList);
+      setAdjustedIngredients(
+        detail.ingredients.map((ingredient) => ({
+          ...ingredient,
+          baseQuantity: Number(ingredient.quantity),
+        }))
+      );
+
+      setImageUploaded(true);
+      setLoadingTools(false);
+      setLoadingIngredients(false);
+    };
+
+    if (isPrefillExpected() && !isPrefillFinished) {
+      handlePrefill();
+      setIsPrefillFinished(true);
+    }
+  }, [
+    getRecipeDetail,
+    isPrefillExpected,
+    isPrefillFinished,
+    setData,
+    setImageUploaded,
+    setIngredients,
+  ]);
 
   const increaseServings = () => {
     if (servings < 10) {
@@ -264,9 +352,9 @@ const RecipeContainer = ({ imageUploaded }: RecipeContainerProps) => {
                         <span className="text-sm font-medium">
                           {`${ingredient.quantity} ${ingredient.unit}`}
                         </span>
-                        <span className="text-sm text-muted-foreground">
+                        {/* <span className="text-sm text-muted-foreground">
                           {ingredient.confidence}% match
-                        </span>
+                        </span> */}
                       </div>
                     </li>
                   ))

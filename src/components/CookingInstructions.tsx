@@ -13,6 +13,7 @@ import { LoadingList } from "@/components/ui/loading-skeleton";
 import { useRecipe } from "@/context/recipe";
 import Mock from "@/mock/cooking-instruction";
 import { cleanJSON } from "@/lib/clean-json";
+import useHistory from "@/usecase/useHistory";
 
 function generatePrompt(dish_name: string, ingredients: string[]) {
   return `
@@ -41,7 +42,12 @@ function generatePrompt(dish_name: string, ingredients: string[]) {
 }
 
 const CookingInstructions = () => {
+  const { updateRecipeInstructions, getRecipeDetail, isPrefillExpected } =
+    useHistory();
   const [activeTimers, setActiveTimers] = useState<Record<number, boolean>>({});
+  const [isPrefillFinished, setIsPrefillFinished] = useState(false);
+  const [isGetInstructionsTriggered, setIsGetInstructionsTriggered] =
+    useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [steps, setSteps] = useState([]);
   const { ingredients, dish_name } = useRecipe();
@@ -79,18 +85,42 @@ const CookingInstructions = () => {
         const cleanResult = cleanJSON(promptResult);
         setIsLoading(false);
         const parsedResult = JSON.parse(cleanResult);
+        updateRecipeInstructions(parsedResult.instructions);
         setSteps(parsedResult.instructions);
       } catch (error) {
         console.error("Error parsing JSON:", error);
       }
     };
 
-    if (ingredients && ingredients.length > 0) {
+    if (
+      ingredients &&
+      ingredients.length > 0 &&
+      !isGetInstructionsTriggered &&
+      !isPrefillExpected()
+    ) {
+      setIsGetInstructionsTriggered(true);
       createModel();
     }
-  }, [ingredients, dish_name]);
+  }, [
+    ingredients,
+    dish_name,
+    updateRecipeInstructions,
+    isPrefillExpected,
+    isGetInstructionsTriggered,
+  ]);
 
-  // console.log(steps);
+  useEffect(() => {
+    const handlePrefill = async () => {
+      const detail = await getRecipeDetail();
+
+      setSteps(detail.instructions);
+      setIsLoading(false);
+    };
+    if (isPrefillExpected() && !isPrefillFinished) {
+      handlePrefill();
+      setIsPrefillFinished(true);
+    }
+  }, [getRecipeDetail, isPrefillExpected, isPrefillFinished]);
 
   return (
     <Card className="p-6 glass">

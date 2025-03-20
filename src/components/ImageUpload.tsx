@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Camera, Upload, CircleX, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -9,14 +9,54 @@ import { getPromptAi } from "@/lib/get-prompt-ai";
 import { useRecipe } from "@/context/recipe";
 import safeParse from "@/lib/safe-parse";
 import { identifyFood as identifyFoodPrompt } from "@/prompts/identify";
+import useHistory from "@/usecase/useHistory";
 
 interface ImageUploadProps {
   onImageUpload: (uploaded: boolean) => void;
 }
 
+function imageToBlob(imgElement, format = "image/png", quality = 1.0) {
+  return new Promise((resolve, reject) => {
+    if (!(imgElement instanceof HTMLImageElement)) {
+      reject(new Error("Provided element is not an image."));
+      return;
+    }
+
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    // Set canvas size to match the image
+    canvas.width = imgElement.naturalWidth;
+    canvas.height = imgElement.naturalHeight;
+
+    // Draw the image onto the canvas
+    ctx.drawImage(imgElement, 0, 0);
+
+    // Convert the canvas to Blob
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject(new Error("Failed to convert image to Blob."));
+        }
+      },
+      format,
+      quality
+    );
+  });
+}
+
 const ImageUpload = ({ onImageUpload }: ImageUploadProps) => {
   const { setData } = useRecipe();
+  const {
+    initializeRecipeResult,
+    resetCurrentRecipe,
+    isPrefillExpected,
+    getRecipeDetail,
+  } = useHistory();
 
+  const [isPrefillFinished, setIsPrefillFinished] = useState(false);
   const [image, setImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -68,6 +108,14 @@ const ImageUpload = ({ onImageUpload }: ImageUploadProps) => {
         dish_name: _result.dish_name,
         match_percentage: _result.match_percentage,
       });
+
+      imageToBlob(caputureImage).then((result) => {
+        initializeRecipeResult(
+          _result.dish_name,
+          _result.match_percentage,
+          result
+        );
+      });
     } catch (error) {
       toast({
         title: "Error Occurred",
@@ -82,12 +130,26 @@ const ImageUpload = ({ onImageUpload }: ImageUploadProps) => {
   const handleRemoveImage = () => {
     setImage(null);
     onImageUpload(false);
+    resetCurrentRecipe();
   };
 
   const onCaptureImage = (image: string) => {
     setImage(image);
     processImage();
   };
+
+  useEffect(() => {
+    const handlePrefill = async () => {
+      const detail = await getRecipeDetail();
+      const imageURLString = URL.createObjectURL(detail.image);
+      setImage(imageURLString);
+    };
+
+    if (isPrefillExpected() && !isPrefillFinished) {
+      handlePrefill();
+      setIsPrefillFinished(true);
+    }
+  }, [getRecipeDetail, isPrefillExpected, isPrefillFinished]);
 
   return (
     <div className="w-full max-w-2xl mx-auto p-6">

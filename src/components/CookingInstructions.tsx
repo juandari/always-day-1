@@ -6,17 +6,21 @@ import {
   CheckCircle2,
   Send,
   X,
+  Mic,
+  MicOff,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import Timer from "./Timer";
 import { Card } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { LoadingList } from "@/components/ui/loading-skeleton";
 import { useRecipe } from "@/context/recipe";
 import { cleanJSON } from "@/lib/clean-json";
 import useHistory from "@/usecase/useHistory";
 import { answerToQuestion } from "@/prompts/step-qna";
+import useSpeech from "@/usecase/useSpeech";
 
 interface Question {
   text: string;
@@ -73,9 +77,18 @@ const CookingInstructions = () => {
   const [askingQuestion, setAskingQuestion] = useState<number | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState("");
   const [isQuestionLoading, setIsQuestionLoading] = useState(false);
+
+  const scrollTo = (elementId: string) => {
+    document.getElementById(elementId).scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
+
   const submitQuestion = useCallback(
-    async (stepIndex: number) => {
-      if (currentQuestion.trim() === "") return;
+    async (stepIndex: number, question?: string) => {
+      const currentSelectedQuestion = question || currentQuestion;
+      if (currentSelectedQuestion.trim() === "") return;
       setIsQuestionLoading(true);
       const session = await window.ai.languageModel.create();
 
@@ -83,19 +96,19 @@ const CookingInstructions = () => {
         dishName: dish_name,
         stepTitle: steps[stepIndex].step,
         stepDescription: steps[stepIndex].description,
-        question: currentQuestion,
+        question: currentSelectedQuestion,
       });
 
       const promptResult = await session.prompt(generatedPrompt);
 
       const newQuestion: Question = {
-        text: currentQuestion,
+        text: currentSelectedQuestion,
         answer: promptResult,
       };
 
       setStepQuestions((prev) => ({
         ...prev,
-        [stepIndex]: [...(prev[stepIndex] || []), newQuestion],
+        [stepIndex]: [newQuestion, ...(prev[stepIndex] || [])],
       }));
 
       setAskingQuestion(null);
@@ -103,8 +116,10 @@ const CookingInstructions = () => {
       setIsQuestionLoading(false);
       updateRecipeQuestions({
         ...stepQuestions,
-        [stepIndex]: [...(stepQuestions[stepIndex] || []), newQuestion],
+        [stepIndex]: [newQuestion, ...(stepQuestions[stepIndex] || [])],
       });
+
+      return promptResult;
     },
     [currentQuestion, dish_name, stepQuestions, steps, updateRecipeQuestions]
   );
@@ -127,13 +142,30 @@ const CookingInstructions = () => {
   };
 
   //console.log(ingredients);
-
   const toggleStepCompletion = (stepIndex: number) => {
     setCompletedSteps((prev) => ({
       ...prev,
       [stepIndex]: !prev[stepIndex],
     }));
   };
+
+  const { speechCommandsActive, toggleSpeechCommands, speakOut } = useSpeech({
+    instructions: steps,
+    questions: stepQuestions,
+    scrollTo,
+    markComplete: toggleStepCompletion,
+    askQuestion: (index, question) => {
+      startAskingQuestion(index);
+      setCurrentQuestion(question);
+
+      const timeout = setTimeout(async () => {
+        const result = await submitQuestion(index, question);
+        speakOut(result);
+      }, 2000);
+
+      return () => clearTimeout(timeout);
+    },
+  });
 
   useEffect(() => {
     const createModel = async () => {
@@ -190,9 +222,61 @@ const CookingInstructions = () => {
 
   return (
     <Card className="p-6 glass">
-      <h2 className="text-xl font-semibold mb-4">
-        Suggested Cooking Instructions
-      </h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">
+          Suggested Cooking Instructions
+        </h2>
+        <div className="flex items-center gap-2">
+          <div
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors ${
+              speechCommandsActive
+                ? "bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+            }`}
+          >
+            <div className="relative">
+              {speechCommandsActive ? (
+                <Mic
+                  className={`w-4 h-4 ${
+                    speechCommandsActive
+                      ? "animate-pulse text-green-600 dark:text-green-400"
+                      : ""
+                  }`}
+                />
+              ) : (
+                <MicOff className="w-4 h-4" />
+              )}
+              {speechCommandsActive && (
+                <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                </span>
+              )}
+            </div>
+            <span className="text-xs font-medium">Voice Control</span>
+            <Switch
+              checked={speechCommandsActive}
+              onCheckedChange={toggleSpeechCommands}
+              className="ml-1 data-[state=checked]:bg-green-600"
+            />
+          </div>
+        </div>
+      </div>
+      <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 mb-4 text-sm">
+        <div className="flex items-start gap-2">
+          <Info className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5" />
+          <div>
+            <p className="font-medium text-green-800 dark:text-green-300">
+              Hands-free cooking assistant
+            </p>
+            <p className="text-green-700 dark:text-green-400">
+              {speechCommandsActive
+                ? 'Active! Say "Hey" followed by commands like "what is step 1", "mark as complete step 2", or "I have a question for step 3, what is this?".'
+                : "Enable voice control to interact with the recipe while cooking."}
+            </p>
+          </div>
+        </div>
+      </div>
       <div className="space-y-0">
         {isLoading ? (
           <LoadingList className="mt-4" />
@@ -215,7 +299,7 @@ const CookingInstructions = () => {
                 </div>
                 <div className="ml-4">
                   <div className="flex justify-between items-start mb-2">
-                    <span className="font-medium">
+                    <span className="font-medium" id={`step_${index + 1}`}>
                       Step {index + 1}: {step.step}
                     </span>
                     {step.time && (

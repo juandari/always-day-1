@@ -5,8 +5,8 @@ import type {
   Ingredient,
   Tool,
   Instruction,
+  Question,
 } from "@/entity/recipe/types";
-import { useCallback } from "react";
 
 function generateUUID() {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
@@ -68,6 +68,11 @@ const useHistory = () => {
     update({ key: id, data: { instructions } });
   };
 
+  const updateRecipeQuestions = (questions: Record<number, Question[]>) => {
+    const id = searchParams.get("recipe_id");
+    update({ key: id, data: { questions } });
+  };
+
   const updateRecipeTools = (tools: Tool[]) => {
     const id = searchParams.get("recipe_id");
     update({ key: id, data: { tools } });
@@ -100,6 +105,7 @@ const useHistory = () => {
     getRecipeDetail,
     isPrefillExpected,
     navigateToRecipeDetail,
+    updateRecipeQuestions,
   };
 };
 

@@ -4,6 +4,11 @@ export interface Instruction {
   time: number;
 }
 
+export interface Question {
+  text: string;
+  answer: string;
+}
+
 interface Unit {
   name: string;
   quantity: number;
@@ -23,4 +28,5 @@ export interface Recipe {
   ingredients: Ingredient[];
   tools: Tool[];
   instructions: Instruction[];
+  questions: Record<number, Question[]>;
 }

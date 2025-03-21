@@ -206,54 +206,114 @@ const useSpeech = ({
               let utterance = null;
               if (command.includes("one") || command.includes("1")) {
                 scrollTo(`step_1`);
-                const question = command.split("one");
-                askQuestion(0, question[1]);
-                utterance = new SpeechSynthesisUtterance(question[1]);
+                if (command.includes("one")) {
+                  const question = command.split("one");
+                  askQuestion(0, question[1]);
+                  utterance = new SpeechSynthesisUtterance(question[1]);
+                } else {
+                  const question = command.split("1");
+                  askQuestion(0, question[1]);
+                  utterance = new SpeechSynthesisUtterance(question[1]);
+                }
               } else if (command.includes("two") || command.includes("2")) {
                 scrollTo(`step_2`);
-                const question = command.split("two");
-                askQuestion(1, question[1]);
-                utterance = new SpeechSynthesisUtterance(question[1]);
+                if (command.includes("two")) {
+                  const question = command.split("two");
+                  askQuestion(1, question[1]);
+                  utterance = new SpeechSynthesisUtterance(question[1]);
+                } else {
+                  const question = command.split("2");
+                  askQuestion(1, question[1]);
+                  utterance = new SpeechSynthesisUtterance(question[1]);
+                }
               } else if (command.includes("three") || command.includes("3")) {
                 scrollTo(`step_3`);
-                const question = command.split("three");
-                askQuestion(2, question[1]);
-                utterance = new SpeechSynthesisUtterance(question[1]);
+                if (command.includes("three")) {
+                  const question = command.split("three");
+                  askQuestion(2, question[1]);
+                  utterance = new SpeechSynthesisUtterance(question[1]);
+                } else {
+                  const question = command.split("3");
+                  askQuestion(2, question[1]);
+                  utterance = new SpeechSynthesisUtterance(question[1]);
+                }
               } else if (command.includes("four") || command.includes("4")) {
                 scrollTo(`step_4`);
-                const question = command.split("four");
-                askQuestion(3, question[1]);
-                utterance = new SpeechSynthesisUtterance(question[1]);
+                if (command.includes("four")) {
+                  const question = command.split("four");
+                  askQuestion(3, question[1]);
+                  utterance = new SpeechSynthesisUtterance(question[1]);
+                } else {
+                  const question = command.split("4");
+                  askQuestion(3, question[1]);
+                  utterance = new SpeechSynthesisUtterance(question[1]);
+                }
               } else if (command.includes("five") || command.includes("5")) {
                 scrollTo(`step_5`);
-                const question = command.split("five");
-                askQuestion(4, question[1]);
-                utterance = new SpeechSynthesisUtterance(question[1]);
+                if (command.includes("five")) {
+                  const question = command.split("five");
+                  askQuestion(4, question[1]);
+                  utterance = new SpeechSynthesisUtterance(question[1]);
+                } else {
+                  const question = command.split("5");
+                  askQuestion(4, question[1]);
+                  utterance = new SpeechSynthesisUtterance(question[1]);
+                }
               } else if (command.includes("six") || command.includes("6")) {
                 scrollTo(`step_6`);
-                const question = command.split("six");
-                askQuestion(5, question[1]);
-                utterance = new SpeechSynthesisUtterance(question[1]);
+                if (command.includes("six")) {
+                  const question = command.split("six");
+                  askQuestion(5, question[1]);
+                  utterance = new SpeechSynthesisUtterance(question[1]);
+                } else {
+                  const question = command.split("6");
+                  askQuestion(5, question[1]);
+                  utterance = new SpeechSynthesisUtterance(question[1]);
+                }
               } else if (command.includes("seven") || command.includes("7")) {
                 scrollTo(`step_7`);
-                const question = command.split("seven");
-                askQuestion(6, question[1]);
-                utterance = new SpeechSynthesisUtterance(question[1]);
+                if (command.includes("seven")) {
+                  const question = command.split("seven");
+                  askQuestion(6, question[1]);
+                  utterance = new SpeechSynthesisUtterance(question[1]);
+                } else {
+                  const question = command.split("7");
+                  askQuestion(6, question[1]);
+                  utterance = new SpeechSynthesisUtterance(question[1]);
+                }
               } else if (command.includes("eight") || command.includes("8")) {
                 scrollTo(`step_8`);
-                const question = command.split("eight");
-                askQuestion(7, question[1]);
-                utterance = new SpeechSynthesisUtterance(question[1]);
+                if (command.includes("eight")) {
+                  const question = command.split("eight");
+                  askQuestion(7, question[1]);
+                  utterance = new SpeechSynthesisUtterance(question[1]);
+                } else {
+                  const question = command.split("8");
+                  askQuestion(7, question[1]);
+                  utterance = new SpeechSynthesisUtterance(question[1]);
+                }
               } else if (command.includes("nine") || command.includes("9")) {
                 scrollTo(`step_9`);
-                const question = command.split("nine");
-                askQuestion(8, question[1]);
-                utterance = new SpeechSynthesisUtterance(question[1]);
+                if (command.includes("eight")) {
+                  const question = command.split("nine");
+                  askQuestion(8, question[1]);
+                  utterance = new SpeechSynthesisUtterance(question[1]);
+                } else {
+                  const question = command.split("9");
+                  askQuestion(8, question[1]);
+                  utterance = new SpeechSynthesisUtterance(question[1]);
+                }
               } else if (command.includes("ten") || command.includes("10")) {
                 scrollTo(`step_10`);
-                const question = command.split("ten");
-                askQuestion(9, question[1]);
-                utterance = new SpeechSynthesisUtterance(question[1]);
+                if (command.includes("ten")) {
+                  const question = command.split("ten");
+                  askQuestion(9, question[1]);
+                  utterance = new SpeechSynthesisUtterance(question[1]);
+                } else {
+                  const question = command.split("10");
+                  askQuestion(9, question[1]);
+                  utterance = new SpeechSynthesisUtterance(question[1]);
+                }
               } else {
                 utterance = new SpeechSynthesisUtterance(
                   "I couln't understand you, please try again."
